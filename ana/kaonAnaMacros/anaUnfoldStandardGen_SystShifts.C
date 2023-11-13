@@ -90,7 +90,7 @@ auto densityEffect = [](long double beta, double gamma){
   };
 
 
-void anaUnfoldStandardGen_SystShifts::Loop(int nUniverses, std::string weightDecision)
+void anaUnfoldStandardGen_SystShifts::Loop(int nUniverses, std::string weightDecision, int oneShift)
 {
 //   In a ROOT session, you can do:
 //      root> .L anaUnfoldStandardGen_SystShifts.C
@@ -157,7 +157,7 @@ std::vector<std::vector<double>> xsec_unfoldDataVecVec;
 std::vector<std::vector<double>> xsec_unfoldMCVecVec;
 std::vector<TH1D> xsec_unfoldDataVecHist;
 std::vector<TH1D> xsec_unfoldMCVecHist;
-TFile *fWrite=new TFile(Form("kaonSystShiftOutputStandardGeni_%s_%d.root",weightDecision.c_str(),nUniverses),"recreate");
+TFile *fWrite=new TFile(Form("kaonSystShiftOutputStandardGeni_%s_%d_%d.root",weightDecision.c_str(),nUniverses,oneShift),"recreate");
 TTree tree("systShift","systShiftTree");
 tree.Branch("xsec_unfoldDataVec",&xsec_unfoldDataVec);
 tree.Branch("xsec_unfoldMCVec",&xsec_unfoldMCVec);
@@ -197,13 +197,13 @@ gRandom->SetSeed(int(time+time+1));
 if (weightDecision=="none") nUniverses=1;
 
 
-
+if (abs(oneShift)==1) nUniverses=1;
 for(int universe=0; universe<nUniverses; universe++){
    std::cout<<"Universe: "<<universe<<std::endl;
    dEdxshift=gRandom->Gaus(1,0.03);
    beamshift=gRandom->Gaus(1,0.012);
-    startShift=gRandom->Gaus(0,0.07625);
-    endShift=gRandom->Gaus(0,0.20830);
+    startShift=gRandom->Gaus(0,1.751);
+    endShift=gRandom->Gaus(0,0.239);
  
    std::cout<<"Generating variables"<<std::endl;
     ediv_var=gRandom->Gaus(0.4559,0.20);
@@ -224,6 +224,7 @@ for(int universe=0; universe<nUniverses; universe++){
    if (extTrk_var<0) extTrk_var=0;
    double brkTrk_var=gRandom->Gaus(1,1);
    if (brkTrk_var<0) brkTrk_var=0;
+
    beamScraper_var=1+abs(gRandom->Gaus(0,2.15));
    //if (beamScraper_var<1) beamScraper_var=1+(1-beamScraper_var);
    if (beamScraper_var<0) beamScraper_var=0;
@@ -241,9 +242,32 @@ for(int universe=0; universe<nUniverses; universe++){
 
     g4rw_index=gRandom->Gaus(1,0.2);
    //double g4rw_var=0.8;
+   double k0_var=gRandom->Gaus(1,0.2);
   
  /* Get Beam Weight */  
  double x_val = gRandom->Gaus(0,1);
+
+ if (abs(oneShift)==1){
+  startShift=1.751*oneShift;
+  endShift=0.239*oneShift;
+  dEdxshift=1+0.03*oneShift;
+  beamshift=1+0.012*oneShift;
+
+  short_var=1+0.2*oneShift;
+  long_var=1+0.03*oneShift;
+  beamScraper_var=1+2.15*oneShift;
+  g4rw_index=1+0.2*oneShift;
+  k0_var=1+0.2*oneShift;
+  brkTrk_var=1+1*oneShift;
+  extTrk_var=1+1*oneShift;
+
+
+   nobeam_var=0.976;
+   ediv_var=0.4559;
+
+  if (weightDecision=="ediv") ediv_var=0.4559+0.2*oneShift;
+  if (weightDecision=="nobeam") nobeam_var=0.976+0.06*oneShift;
+}
 
 
 std::cout<<"Throws generated"<<std::endl;
@@ -331,6 +355,25 @@ if (g4rw_weight<0.001) g4rw_weight=0.00;
 //std::cout<<"Weight: "<<g4rw_weight<<std::endl;
 coeffs.clear();
 }
+double k0_weight=1.f;
+int numPart=0;
+int numKaon=0;
+       int  nKaonPlus=0; 
+       int nKaon0=0;
+       int nKaonMinus=0;
+      for(long unsigned int i=0; i<true_beam_daughter_PDG->size(); i++){
+
+
+        if (true_beam_daughter_PDG->at(i)==321) nKaonPlus++;
+        if (true_beam_daughter_PDG->at(i)==310 || true_beam_daughter_PDG->at(i)==130) nKaon0++;
+        if (true_beam_daughter_PDG->at(i)==-321) nKaonMinus++;
+	} 
+
+if (selection_ID<3 && reco_beam_true_byE_ID==true_beam_ID && true_beam_endZ<222.1056 && true_beam_endZ>30.0){
+if (nKaon0==1 && nKaonMinus==0 && nKaonPlus==0) k0_weight=k0_var;
+else k0_weight=(1-k0_var*4889.000/10081.000)/(1-4889.000/10081.000);
+}
+if (k0_weight<0) k0_weight=0.0000;
 
 
 double extTrk_weight=1.f;
@@ -351,45 +394,125 @@ if (extTrk_weight<0) extTrk_weight=0.0;
 
 
    
-	  double tot_weight=brkTrk_weight*extTrk_weight*beamScraper_weight*g4rw_weight*ediv_weight*nobeam_weight*matched_weight;
+	  double tot_weight=brkTrk_weight*extTrk_weight*beamScraper_weight*k0_weight*g4rw_weight*ediv_weight*nobeam_weight*matched_weight;
 if (weightDecision=="none"){
 tot_weight=ediv_weight*nobeam_weight;
 beamshift=1.f;
 dEdxshift=1.f;
 startShift=0;
 endShift=0;
-
 }
 
 else if (weightDecision=="ediv"){
 tot_weight=ediv_weight;
 beamshift=1.f;
 dEdxshift=1.f;
-
-
+startShift=0;
+endShift=0;
 }
 else if(weightDecision=="calo"){
-
-tot_weight=1.f;
+startShift=0;
+endShift=0;
+tot_weight=ediv_weight*nobeam_weight;
 }
-else if (weightDecision=="beam"){
-tot_weight=nobeam_weight*matched_weight;
+else if(weightDecision=="calodEdx"){
+startShift=0;
+endShift=0;
+beamshift=1.f;
+tot_weight=ediv_weight*nobeam_weight;
+}
+else if(weightDecision=="caloBeam"){
+startShift=0;
+endShift=0;
+dEdxshift=1.f;
+tot_weight=ediv_weight*nobeam_weight;
+}
+else if (weightDecision=="nobeam"){
+tot_weight=nobeam_weight;
 beamshift=1.f;
 dEdxshift=1.f;
-
+startShift=0;
+endShift=0;
+}
+else if (weightDecision=="matchbeam"){
+tot_weight=ediv_weight*nobeam_weight*matched_weight;
+beamshift=1.f;
+dEdxshift=1.f;
+startShift=0;
+endShift=0;
 }
 else if (weightDecision=="beamScraper"){
 //std::cout>>beamScraper_weight
 tot_weight=ediv_weight*nobeam_weight*beamScraper_weight;
 beamshift=1.f;
 dEdxshift=1.f;
+startShift=0;
+endShift=0;
+
 }
 else if (weightDecision=="g4rw"){
+tot_weight=ediv_weight*nobeam_weight*g4rw_weight;
+beamshift=1.f;
+dEdxshift=1.f;
+endShift=0;
+startShift=0;
+
+}
+else if (weightDecision=="k0rw"){
+
+tot_weight=ediv_weight*nobeam_weight*k0_weight;
+beamshift=1.f;
+dEdxshift=1.f;
+endShift=0;
+startShift=0;
+
+
+}
+else if(weightDecision=="g4rwTest"){
 tot_weight=g4rw_weight;
 beamshift=1.f;
 dEdxshift=1.f;
+startShift=0;
+endShift=0;
 
 }
+else if (weightDecision=="brk"){
+startShift=0;
+endShift=0;
+beamshift=1.f;
+dEdxshift=1.f;
+tot_weight=ediv_weight*nobeam_weight*brkTrk_weight;
+
+}
+else if(weightDecision=="ext"){
+startShift=0;
+endShift=0;
+beamshift=1.f;
+dEdxshift=1.f;
+tot_weight=ediv_weight*nobeam_weight*extTrk_weight;
+}
+else if(weightDecision=="sceFront"){
+endShift=0;
+beamshift=1.f;
+dEdxshift=1.f;
+tot_weight=ediv_weight*nobeam_weight;
+
+
+
+}
+else if (weightDecision=="sceBack"){
+
+startShift=0;
+beamshift=1.f;
+dEdxshift=1.f;
+tot_weight=ediv_weight*nobeam_weight;
+
+
+
+
+}
+
+
 else weightDecision="all";  
 //double tot_weight=g4rw_primary_grid_weights->at(g4rw_index); 
 //std::cout<<"Generated weights"<<std::endl;   

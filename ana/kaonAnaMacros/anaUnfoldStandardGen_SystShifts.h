@@ -72,6 +72,7 @@ public :
    vector<double>  *reco_beam_calo_wire_z;
    vector<int>     *true_beam_slices;
    vector<double>  *true_beam_slices_dE;
+   vector<double>  *true_beam_daughter_PDG;
    Double_t        beam_inst_KE;
    Double_t        beam_inst_P;
    Double_t        beam_inst_X;
@@ -155,6 +156,7 @@ public :
    TBranch        *b_reco_beam_trackEndDirZ;   //!
    TBranch        *b_reco_beam_trackEndDirY;   //!
    TBranch        *b_reco_beam_trackEndDirX;   //!
+   TBranch        *b_true_beam_daughter_PDG;   //!
    TBranch        *b_reco_beam_endZ;   //!
    TBranch        *b_reco_beam_calo_endZ;   //!
    TBranch        *b_true_beam_endZ;   //!
@@ -226,7 +228,7 @@ public :
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
-   virtual void     Loop(int nUniverses, std::string weightDecision);
+   virtual void     Loop(int nUniverses, std::string weightDecision, int oneShift);
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 };
@@ -298,6 +300,7 @@ void anaUnfoldStandardGen_SystShifts::Init(TTree *tree)
    true_beam_slices_dE = 0;
    true_beam_traj_Z = 0;
    true_beam_traj_KE = 0;
+   true_beam_daughter_PDG = 0;
    reco_daughter_allTrack_len = 0;
    reco_daughter_allTrack_ID = 0;
    reco_daughter_PFP_true_byHits_PDG = 0;
@@ -343,6 +346,7 @@ void anaUnfoldStandardGen_SystShifts::Init(TTree *tree)
    fChain->SetBranchAddress("true_beam_endP", &true_beam_endP, &b_true_beam_endP);
    fChain->SetBranchAddress("true_beam_traj_Eff",&true_beam_traj_Eff,&b_true_beam_traj_Eff);
    fChain->SetBranchAddress("true_beam_startP", &true_beam_startP, &b_true_beam_startP);
+   fChain->SetBranchAddress("true_beam_daughter_PDG", &true_beam_daughter_PDG, &b_true_beam_daughter_PDG);
    fChain->SetBranchAddress("selection_ID", &selection_ID, &b_selection_ID);
    fChain->SetBranchAddress("sample_ID", &sample_ID, &b_sample_ID);
    fChain->SetBranchAddress("reco_beam_daughter_sameID", &reco_beam_daughter_sameID, &b_reco_beam_daughter_sameID);

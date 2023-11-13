@@ -72,6 +72,7 @@ public :
    vector<double>  *reco_beam_calo_wire_z;
    vector<int>     *true_beam_slices;
    vector<double>  *true_beam_slices_dE;
+   vector<double>  *true_beam_daughter_PDG;
    Double_t        beam_inst_KE;
    Double_t        beam_inst_P;
    Double_t        beam_inst_X;
@@ -170,6 +171,7 @@ public :
    TBranch        *b_reco_beam_calo_wire_z;   //!
    TBranch        *b_true_beam_slices;   //!
    TBranch        *b_true_beam_slices_dE;   //!
+   TBranch        *b_true_beam_daughter_PDG;   //!
    TBranch        *b_beam_inst_KE;   //!
    TBranch        *b_beam_inst_P;   //!
    TBranch        *b_beam_inst_X;   //!
@@ -226,7 +228,7 @@ public :
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
-   virtual void     Loop(std::string weightDecision);
+   virtual void     Loop(std::string weightDecision, int oneShift);
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 };
@@ -295,6 +297,7 @@ void anaUnfoldStandardGen_SystShifts::Init(TTree *tree)
    reco_beam_calo_wire_z = 0;
    true_beam_slices = 0;
    true_beam_slices_dE = 0;
+   true_beam_daughter_PDG = 0;
    true_beam_traj_Z = 0;
    true_beam_traj_KE = 0;
    true_beam_traj_Eff=0;
@@ -380,6 +383,7 @@ void anaUnfoldStandardGen_SystShifts::Init(TTree *tree)
    fChain->SetBranchAddress("reco_beam_calo_wire_z", &reco_beam_calo_wire_z, &b_reco_beam_calo_wire_z);
    fChain->SetBranchAddress("true_beam_slices", &true_beam_slices, &b_true_beam_slices);
    fChain->SetBranchAddress("true_beam_slices_dE", &true_beam_slices_dE, &b_true_beam_slices_dE);
+   fChain->SetBranchAddress("true_beam_daughter_PDG", &true_beam_daughter_PDG, &b_true_beam_daughter_PDG);
    fChain->SetBranchAddress("beam_inst_KE", &beam_inst_KE, &b_beam_inst_KE);
    fChain->SetBranchAddress("beam_inst_P", &beam_inst_P, &b_beam_inst_P);
    fChain->SetBranchAddress("beam_inst_X", &beam_inst_X, &b_beam_inst_X);

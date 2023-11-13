@@ -447,7 +447,7 @@ int numKaon=0;
 	} 
 weight=1.f;
 if (reco_beam_true_byE_ID_data==true_beam_ID_data && true_beam_endZ_data<222.1056 && true_beam_endZ_data>30.0){
-if (nKaon0==1) weight=coeff;
+if (nKaon0==1 && nKaonMinus==0 && nKaonPlus==0) weight=coeff;
 else weight=(1-coeff*4889.000/10081.000)/(1-4889.000/10081.000);
 }
 if (weight<0) weight=0.0000;

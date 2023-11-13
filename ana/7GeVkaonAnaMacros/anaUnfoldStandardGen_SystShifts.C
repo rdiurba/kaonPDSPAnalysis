@@ -90,7 +90,7 @@ auto densityEffect = [](long double beta, double gamma){
   };
 
 
-void anaUnfoldStandardGen_SystShifts::Loop(std::string weightDecision)
+void anaUnfoldStandardGen_SystShifts::Loop(std::string weightDecision, int oneShift)
 {
 //   In a ROOT session, you can do:
 //      root> .L anaUnfoldStandardGen_SystShifts.C
@@ -158,7 +158,7 @@ std::vector<std::vector<double>> xsec_unfoldDataVecVec;
 std::vector<std::vector<double>> xsec_unfoldMCVecVec;
 std::vector<TH1D> xsec_unfoldDataVecHist;
 std::vector<TH1D> xsec_unfoldMCVecHist;
-TFile *fWrite=new TFile(Form("7GeVkaonSystShiftOutputStandardGen_%s.root",weightDecision.c_str()),"recreate");
+TFile *fWrite=new TFile(Form("7GeVkaonSystShiftOutputStandardGen_%s_%d.root",weightDecision.c_str(),oneShift),"recreate");
 double startShift=-1; double endShift=-1;
 double  dEdxshift=-1; double beamshift=-1; double  ediv_var=-1; double  nobeam_var=-1; double long_var=-1; double short_var=-1; double  g4rw_index=-1;
 double  beamScraper_var=-1;
@@ -198,11 +198,12 @@ gRandom->SetSeed(int(time+time+2));
   double relative_ediv_var=TMath::Sqrt(fChain->GetEntries("selection_ID==3"))/fChain->GetEntries("selection_ID==3");
   double relative_brkTrk_var=TMath::Sqrt(fChain->GetEntries("selection_ID<3 && reco_beam_daughter_sameID==1"))/fChain->GetEntries("selection_ID<3 && reco_beam_daughter_sameID==1");
 int nUniverses=1000;
+if (abs(oneShift)==1) nUniverses=1;
 if (weightDecision=="none") nUniverses=1;
 for(int universe=0; universe<nUniverses; universe++){
    std::cout<<"Universe: "<<universe<<std::endl;
-    startShift=gRandom->Gaus(0,0.07625);
-    endShift=gRandom->Gaus(0,0.20830);
+    startShift=gRandom->Gaus(0,1.751);
+    endShift=gRandom->Gaus(0,0.239);
     dEdxshift=gRandom->Gaus(1,0.03);
     beamshift=gRandom->Gaus(1,0.012);
   // dEdxshift=1.0; beamshift=1.0;
@@ -212,6 +213,7 @@ for(int universe=0; universe<nUniverses; universe++){
    if (ediv_var<0) ediv_var=0.00;
    // nobeam_var=gRandom->Gaus(0.953,0.1);
    nobeam_var=gRandom->Gaus(0.86972,0.06);
+   
    //double nobeam_var=gRandom->Gaus(1.0,0.5);
    //if (nobeam_var>2) nobeam_var=1.99;
    if (nobeam_var<0) nobeam_var=0.00;
@@ -241,6 +243,7 @@ for(int universe=0; universe<nUniverses; universe++){
    //if (brkTrk_var>2) brkTrk_var=1.99;
    //if (brkTrk_var<0) brkTrk_var=0.01;
    g4rw_index=gRandom->Gaus(1,0.2);
+   double k0_var=gRandom->Gaus(1,0.2);
    //double g4rw_var=0.8;
    if (weightDecision=="g4rwTest"){
    g4rw_index=gRandom->Gaus(0.5,0.00001);
@@ -260,7 +263,28 @@ else myfile<<universe<<","<<450*0.5<<","<<"0"<<std::endl;
 
 
 } 
- /* Get Beam Weight */  
+ if (abs(oneShift)==1){
+  startShift=1.751*oneShift;
+  endShift=0.239*oneShift;
+  dEdxshift=1+0.03*oneShift;
+  beamshift=1+0.012*oneShift;
+  ediv_var=0.3663+0.2*oneShift;
+  nobeam_var=0.86972+0.06*oneShift;
+  short_var=1+0.2*oneShift;
+  long_var=1+0.03*oneShift;
+  beamScraper_var=1+2.15*oneShift;
+  g4rw_index=1+0.2*oneShift;
+  k0_var=1+0.2*oneShift;
+  brkTrk_var=1+1*oneShift;
+  extTrk_var=1+1*oneShift;
+   ediv_var=0.3663;
+   nobeam_var=0.86972;
+
+
+  if (weightDecision=="ediv") ediv_var=0.3663+0.2*oneShift;
+  if (weightDecision=="nobeam") nobeam_var=0.86972+0.06*oneShift;
+}
+   /* Get Beam Weight */  
  double x_val = gRandom->Gaus(0,1);
 
 
@@ -353,6 +377,25 @@ if (g4rw_weight<0.0) g4rw_weight=0.0;
 //std::cout<<"Weight: "<<g4rw_weight<<std::endl;
 coeffs.clear();
 }
+double k0_weight=1.f;
+int numPart=0;
+int numKaon=0;
+       int  nKaonPlus=0; 
+       int nKaon0=0;
+       int nKaonMinus=0;
+      for(long unsigned int i=0; i<true_beam_daughter_PDG->size(); i++){
+
+
+        if (true_beam_daughter_PDG->at(i)==321) nKaonPlus++;
+        if (true_beam_daughter_PDG->at(i)==310 || true_beam_daughter_PDG->at(i)==130) nKaon0++;
+        if (true_beam_daughter_PDG->at(i)==-321) nKaonMinus++;
+	} 
+
+if (selection_ID<3 && reco_beam_true_byE_ID==true_beam_ID && true_beam_endZ<222.1056 && true_beam_endZ>30.0){
+if (nKaon0==1 && nKaonMinus==0 && nKaonPlus==0) k0_weight=k0_var;
+else k0_weight=(1-k0_var*1056.00/2122.00)/(1-1056.00/2122.00);
+}
+if (k0_weight<0) k0_weight=0.0000;
  
 double brkTrk_weight=1.f;
 
@@ -372,7 +415,7 @@ else brkTrk_weight=(1-brkTrk_var*0.02864)/(1-0.02864);
 if (brkTrk_weight<0) brkTrk_weight=0.0;
 if (extTrk_weight<0) extTrk_weight=0.0;
 
-	  double tot_weight=brkTrk_weight*extTrk_weight*beamScraper_weight*g4rw_weight*ediv_weight*nobeam_weight*matched_weight;
+	  double tot_weight=brkTrk_weight*extTrk_weight*beamScraper_weight*g4rw_weight*k0_weight*ediv_weight*nobeam_weight*matched_weight;
   
 if (weightDecision=="none"){
 tot_weight=ediv_weight*nobeam_weight;
@@ -392,10 +435,29 @@ endShift=0;
 else if(weightDecision=="calo"){
 startShift=0;
 endShift=0;
-tot_weight=1.f;
+tot_weight=ediv_weight*nobeam_weight;
 }
-else if (weightDecision=="beam"){
-tot_weight=nobeam_weight*matched_weight;
+else if(weightDecision=="calodEdx"){
+startShift=0;
+endShift=0;
+beamshift=1.f;
+tot_weight=ediv_weight*nobeam_weight;
+}
+else if(weightDecision=="caloBeam"){
+startShift=0;
+endShift=0;
+dEdxshift=1.f;
+tot_weight=ediv_weight*nobeam_weight;
+}
+else if (weightDecision=="nobeam"){
+tot_weight=nobeam_weight;
+beamshift=1.f;
+dEdxshift=1.f;
+startShift=0;
+endShift=0;
+}
+else if (weightDecision=="matchbeam"){
+tot_weight=ediv_weight*nobeam_weight*matched_weight;
 beamshift=1.f;
 dEdxshift=1.f;
 startShift=0;
@@ -403,7 +465,7 @@ endShift=0;
 }
 else if (weightDecision=="beamScraper"){
 //std::cout>>beamScraper_weight
-tot_weight=beamScraper_weight;
+tot_weight=ediv_weight*nobeam_weight*beamScraper_weight;
 beamshift=1.f;
 dEdxshift=1.f;
 startShift=0;
@@ -411,11 +473,21 @@ endShift=0;
 
 }
 else if (weightDecision=="g4rw"){
-tot_weight=g4rw_weight;
+tot_weight=ediv_weight*nobeam_weight*g4rw_weight;
 beamshift=1.f;
 dEdxshift=1.f;
 endShift=0;
 startShift=0;
+
+}
+else if (weightDecision=="k0rw"){
+
+tot_weight=ediv_weight*nobeam_weight*k0_weight;
+beamshift=1.f;
+dEdxshift=1.f;
+endShift=0;
+startShift=0;
+
 
 }
 else if(weightDecision=="g4rwTest"){
@@ -426,12 +498,39 @@ startShift=0;
 endShift=0;
 
 }
-else if (weightDecision=="brkExt"){
+else if (weightDecision=="brk"){
 startShift=0;
 endShift=0;
 beamshift=1.f;
 dEdxshift=1.f;
-tot_weight=brkTrk_weight*extTrk_weight;
+tot_weight=ediv_weight*nobeam_weight*brkTrk_weight;
+
+}
+else if(weightDecision=="ext"){
+startShift=0;
+endShift=0;
+beamshift=1.f;
+dEdxshift=1.f;
+tot_weight=ediv_weight*nobeam_weight*extTrk_weight;
+}
+else if(weightDecision=="sceFront"){
+endShift=0;
+beamshift=1.f;
+dEdxshift=1.f;
+tot_weight=ediv_weight*nobeam_weight;
+
+
+
+}
+else if (weightDecision=="sceBack"){
+
+startShift=0;
+beamshift=1.f;
+dEdxshift=1.f;
+tot_weight=ediv_weight*nobeam_weight;
+
+
+
 
 }
 

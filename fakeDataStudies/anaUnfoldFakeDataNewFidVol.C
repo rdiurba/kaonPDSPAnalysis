@@ -395,7 +395,7 @@ TH1D* h1d_reco_incidentE_data=new TH1D("h1d_reco_incidentE_data","h1d_reco_incid
 
    t->GetEntry(jentry);
 double weight=1.f;//coeff;
- if (selection_ID_data==1  && reco_beam_endZ_data<220.0+0.2082*vol2 && reco_beam_endZ_data>(51.8865+0.0763*vol)){ h1d_reco_interactingE_data->Fill(reco_beam_calibrated_interactingEnergy_data,weight);
+ if (selection_ID_data==1  && reco_beam_endZ_data<220.0+0.239*vol2 && reco_beam_endZ_data>(51.8865+1.751*vol)){ h1d_reco_interactingE_data->Fill(reco_beam_calibrated_interactingEnergy_data,weight);
 }
 if(selection_ID_data<3){
 h1d_reco_interactingE_passBQT_data->Fill(reco_beam_calibrated_interactingEnergy_data);
@@ -418,7 +418,7 @@ currentdEdx=reco_beam_calibrated_dEdX_SCE_data->at(index);
 interactingKE=interactingKE-currentdEdx*reco_beam_TrkPitch_SCE_data->at(index);
 }
 if(index<reco_beam_calibrated_dEdX_SCE_data->size()-1){
-if (reco_beam_calo_wire_z_data->at(index)<220.0+0.208*vol2  && reco_beam_calo_wire_z_data->at(index)>(51.8865+0.0762*vol)) h1d_reco_incidentE_data->Fill(interactingKE);
+if (reco_beam_calo_wire_z_data->at(index)<220.0+0.239*vol2  && reco_beam_calo_wire_z_data->at(index)>(51.8865+1.751*vol)) h1d_reco_incidentE_data->Fill(interactingKE);
 }
 
 }
