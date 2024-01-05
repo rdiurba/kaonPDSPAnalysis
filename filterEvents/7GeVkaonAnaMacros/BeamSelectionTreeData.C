@@ -168,6 +168,13 @@ tree.Branch("beam_inst_KE",&beam_inst_KE,"beam_inst_KE/D");
 tree.Branch("beam_inst_P",&beam_inst_P,"beam_inst_P/D");
 
 
+tree.Branch("reco_beam_calo_Z",&reco_beam_calo_Z);
+tree.Branch("reco_beam_calo_X",&reco_beam_calo_X);
+tree.Branch("reco_beam_calo_Y",&reco_beam_calo_Y);
+
+
+
+
 tree.Branch("beam_inst_C0",&beam_inst_C0,"beam_inst_C0/I");
 tree.Branch("beam_inst_C1",&beam_inst_C1,"beam_inst_C1/I");
 
@@ -214,6 +221,39 @@ tree.Branch("reco_beam_calibrated_incidentEnergies",&reco_beam_calibrated_incide
 reco_beam_nDaughters=reco_daughter_allTrack_ID->size();
 reco_daughter_PFP_true_nDaughters=reco_daughter_PFP_true_byHits_ID->size();
     // trklen=reco_beam_len;
+     for (long unsigned int calo=0; calo<reco_beam_calo_X->size();calo++){
+     if (calo==0) reco_beam_startZ=reco_beam_calo_Z->at(calo);
+     if (reco_beam_calo_Z->at(calo)>40) break;
+     if (abs(reco_beam_startZ-30)<abs(reco_beam_calo_Z->at(calo)-30)) continue;
+
+     reco_beam_startX=reco_beam_calo_X->at(calo);
+     reco_beam_startY=reco_beam_calo_Y->at(calo);
+     reco_beam_startZ=reco_beam_calo_Z->at(calo);
+     }
+     reco_beam_endX=reco_beam_calo_endX;
+     reco_beam_endY=reco_beam_calo_endY;
+     reco_beam_endZ=reco_beam_calo_endZ;
+     double cosDirX=beam_inst_dirX/beam_inst_dirZ;
+     double cosDirY=beam_inst_dirY/beam_inst_dirZ;
+     double newX=(30-beam_inst_Z)*cosDirX+beam_inst_X;
+     double newY=(30-beam_inst_Z)*cosDirY+beam_inst_Y;
+     beam_inst_X=newX;
+     beam_inst_Y=newY;
+     beam_inst_Z=30;
+     double dZCalo=reco_beam_endZ-reco_beam_startZ;
+     double dXCalo=reco_beam_endX-reco_beam_startX;
+     double dYCalo=reco_beam_endY-reco_beam_startY;
+     double reco_beam_trkLen_30cm=TMath::Sqrt(dXCalo*dXCalo+dYCalo*dYCalo+dZCalo*dZCalo);
+     reco_beam_trackDirX=dXCalo/reco_beam_trkLen_30cm;
+     reco_beam_trackDirY=dYCalo/reco_beam_trkLen_30cm;
+     reco_beam_trackDirZ=dZCalo/reco_beam_trkLen_30cm;
+
+
+
+
+
+
+
     beam_inst_KE=1000.f*(TMath::Sqrt(beam_inst_P*beam_inst_P+0.493*0.493)-0.493);
 //double totalEvent=0;
 std::string inelProcess="kaon+Inelastic";
@@ -238,8 +278,8 @@ beam_inst_KE=1000.f*(TMath::Sqrt(beam_inst_P*beam_inst_P+0.9383*0.9383)-0.9383);
    if (beam_inst_P<5 || beam_inst_P>9) continue;
    if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1) selection_ID=5;
    //if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1) continue;
-      else if (reco_beam_endZ<51.8865) selection_ID=4;
-   else if (!(abs(beam_inst_Y-reco_beam_startY+1.3076)<2.8644  && abs(beam_inst_Z-reco_beam_startZ+31.1803)<3.6184  && abs(beam_inst_X-reco_beam_startX+4.9189)<1.2258 && reco_beam_dCos>0.9645 && abs(reco_beam_diffXY-5.1616)<1.3136)) selection_ID=3;
+      else if (reco_beam_endZ<30) selection_ID=4;
+   else if (!(abs(beam_inst_Y-reco_beam_startY+0.740635)<(3*0.859361)  /*&& abs(beam_inst_Z-reco_beam_startZ+0.00334768)<(0.24433*3)*/  && abs(beam_inst_X-reco_beam_startX+3.7956)<(0.539924*3) && reco_beam_dCos>(1-3*0.004791) && reco_beam_dCos<1 &&  abs(reco_beam_diffXY-3.9561)<(0.5866345*3))) selection_ID=3;
    else if (reco_beam_endZ>220.0) selection_ID=2;
    else if (reco_beam_dirCos<.99) selection_ID=1;
    else{ selection_ID=1;

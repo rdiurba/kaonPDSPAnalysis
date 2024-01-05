@@ -213,6 +213,15 @@ tree.Branch("beam_inst_XY",&beam_inst_XY,"beam_inst_XY/D");
 tree.Branch("reco_beam_dCos",&reco_beam_dCos,"reco_beam_dCos/D");
 tree.Branch("reco_beam_dirCos",&reco_beam_dirCos,"reco_beam_dirCos/D");
 tree.Branch("reco_beam_zEndPointCos",&reco_beam_zEndPointCos,"reco_beam_zEndPointCos/D");
+
+tree.Branch("reco_beam_calo_Z",&reco_beam_calo_Z);
+tree.Branch("reco_beam_calo_X",&reco_beam_calo_X);
+tree.Branch("reco_beam_calo_Y",&reco_beam_calo_Y);
+
+
+
+
+
 tree.Branch("reco_beam_cosXZ",&reco_beam_cosXZ,"reco_beam_cosXZ/D");
 tree.Branch("reco_beam_cosYZ",&reco_beam_cosYZ,"reco_beam_cosYZ/D");
 tree.Branch("true_beam_traj_Z",&true_beam_traj_Z);
@@ -231,6 +240,8 @@ tree.Branch("reco_beam_calibrated_interactingEnergy",&reco_beam_calibrated_inter
 tree.Branch("reco_beam_calibrated_incidentEnergies",&reco_beam_calibrated_incidentEnergies);
 tree.Branch("reco_beam_calo_startZ",&reco_beam_calo_startZ);
 tree.Branch("reco_beam_calo_endZ",&reco_beam_calo_endZ);
+tree.Branch("true_beam_daughter_ID",&true_beam_daughter_ID);
+
 tree.Branch("true_beam_daughter_startP",&true_beam_daughter_startP);
 tree.Branch("true_beam_daughter_startPx",&true_beam_daughter_startPx);
 tree.Branch("true_beam_daughter_startPy",&true_beam_daughter_startPy);
@@ -253,7 +264,7 @@ tree.Branch("reco_daughter_allTrack_endX",&reco_daughter_allTrack_endX);
 tree.Branch("reco_daughter_allTrack_endY",&reco_daughter_allTrack_endY);
 tree.Branch("reco_daughter_allTrack_endZ",&reco_daughter_allTrack_endZ);
 
-
+tree.Branch("reco_daughter_PFP_true_byHits_len",&reco_daughter_PFP_true_byHits_len);
 tree.Branch("reco_daughter_PFP_true_byHits_startX",&reco_daughter_PFP_true_byHits_startX);
 tree.Branch("reco_daughter_PFP_true_byHits_startY",&reco_daughter_PFP_true_byHits_startY);
 tree.Branch("reco_daughter_PFP_true_byHits_startZ",&reco_daughter_PFP_true_byHits_startZ);
@@ -293,6 +304,44 @@ Long64_t nbytes = 0, nb = 0;
     TVector3 vhat=vec.Unit();
     reco_beam_zEndPointCos=vhat(2);
     trklen=TMath::Sqrt(dX*dX+dY*dY+dZ*dZ);
+
+     for (long unsigned int calo=0; calo<reco_beam_calo_X->size();calo++){
+     if (calo==0)      reco_beam_startZ=reco_beam_calo_Z->at(0);
+     if (reco_beam_calo_Z->at(calo)>40) break;
+     if (abs(reco_beam_startZ-30)<abs(reco_beam_calo_Z->at(calo)-30)) continue;
+     reco_beam_startX=reco_beam_calo_X->at(calo);
+     reco_beam_startY=reco_beam_calo_Y->at(calo);
+     reco_beam_startZ=reco_beam_calo_Z->at(calo);
+     }
+     reco_beam_endX=reco_beam_calo_endX;
+     reco_beam_endY=reco_beam_calo_endY;
+     reco_beam_endZ=reco_beam_calo_endZ;
+     double cosDirX=beam_inst_dirX/beam_inst_dirZ;
+     double cosDirY=beam_inst_dirY/beam_inst_dirZ;
+     double newX=(30-beam_inst_Z)*cosDirX+beam_inst_X;
+     double newY=(30-beam_inst_Z)*cosDirY+beam_inst_Y;
+     beam_inst_X=newX;
+     beam_inst_Y=newY;
+     beam_inst_Z=30;
+     double dZCalo=reco_beam_endZ-reco_beam_startZ;
+     double dXCalo=reco_beam_endX-reco_beam_startX;
+     double dYCalo=reco_beam_endY-reco_beam_startY;
+     double reco_beam_trkLen_30cm=TMath::Sqrt(dXCalo*dXCalo+dYCalo*dYCalo+dZCalo*dZCalo);
+     reco_beam_trackDirX=dXCalo/reco_beam_trkLen_30cm;
+     reco_beam_trackDirY=dYCalo/reco_beam_trkLen_30cm;
+     reco_beam_trackDirZ=dZCalo/reco_beam_trkLen_30cm;
+
+
+
+
+
+
+
+
+
+
+
+
      
     reco_beam_nDaughters=reco_daughter_allTrack_ID->size();
    reco_daughter_PFP_true_nDaughters=reco_daughter_PFP_true_byHits_ID->size();
@@ -331,8 +380,8 @@ inelProcess="protonInelastic";
    if (beam_inst_P<4 || beam_inst_P>8) continue;
    if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1 ) selection_ID=5;
   // if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1) continue;
-      else if (reco_beam_endZ<51.8865) selection_ID=4;
-   else if (abs(reco_beam_dCos)<0.98739 || reco_beam_dCos>0.99737 || abs(beam_inst_Y-reco_beam_startY+0.3339)>0.8682 || abs(beam_inst_Z-reco_beam_startZ+29.6143)>1.216  || abs(beam_inst_X-reco_beam_startX-0.04133)>0.7698 || abs(reco_beam_diffXY-0.4308)>0.6864) selection_ID=3;
+      else if (reco_beam_endZ<30.0) selection_ID=4;
+   else if (abs(reco_beam_dCos)<(1-0.0027175*3) || reco_beam_dCos>1 || abs(beam_inst_Y-reco_beam_startY+0.901945)>(3*0.338425) || /*abs(beam_inst_Z-reco_beam_startZ+0.00217030)>(3*0.203493)  ||*/  abs(beam_inst_X-reco_beam_startX-2.12682)>(0.320404*3) || abs(reco_beam_diffXY-2.33508)>(3*0.322135)) selection_ID=3;
    else if (reco_beam_endZ>220.0) selection_ID=2;
    else if (reco_beam_zEndPointCos<.99 && reco_beam_zEndPointCos>0.87) selection_ID=1;
    else{ selection_ID=1;

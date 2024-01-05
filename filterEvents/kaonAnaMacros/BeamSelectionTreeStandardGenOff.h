@@ -914,15 +914,38 @@ BeamSelectionTreeStandardGenOff::BeamSelectionTreeStandardGenOff(TTree *tree) : 
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
-   if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/pnfs/dune/scratch/users/rdiurba/pduneana_6GeV_sce_off_ntuple_v1.root");
-      if (!f || !f->IsOpen()) {
-         f = new TFile("/pnfs/dune/scratch/users/rdiurba/pduneana_6GeV_sce_off_ntuple_v1.root");
-      }
-      TDirectory * dir = (TDirectory*)f->Get("/pnfs/dune/scratch/users/rdiurba/pduneana_6GeV_sce_off_ntuple_v1.root:/pduneana");
-      dir->GetObject("beamana",tree);
+ if (tree == 0) {
 
-   }
+
+
+
+    TChain * chain = new TChain("pduneana/beamana","");
+
+chain->Add("/pnfs/dune/tape_backed/dunepro/protodune-sp/root-tuple/2022/mc/physics/PDSPProd4a/23/33/53/79/PDSPProd4a_MC_6GeV_Set00_reco1_sce_off_v1_ntuple_v09_44_00_02.root/pduneana/beamana");
+chain->Add("/pnfs/dune/tape_backed/dunepro/protodune-sp/root-tuple/2022/mc/physics/PDSPProd4a/23/40/00/65/PDSPProd4a_MC_6GeV_Set01_reco1_sce_off_v1_ntuple_v09_44_00_02.root/pduneana/beamana");
+chain->Add("/pnfs/dune/tape_backed/dunepro/protodune-sp/root-tuple/2022/mc/physics/PDSPProd4a/23/40/54/45/PDSPProd4a_MC_6GeV_Set02_reco1_sce_off_v1_ntuple_v09_44_00_02.root/pduneana/beamana");
+chain->Add("/pnfs/dune/tape_backed/dunepro/protodune-sp/root-tuple/2022/mc/physics/PDSPProd4a/23/40/63/99/PDSPProd4a_MC_6GeV_Set03_reco1_sce_off_v1_ntuple_v09_44_00_02.root/pduneana/beamana");
+chain->Add("/pnfs/dune/tape_backed/dunepro/protodune-sp/root-tuple/2022/mc/physics/PDSPProd4a/23/40/71/78/PDSPProd4a_MC_6GeV_Set05_reco1_sce_off_v1_ntuple_v09_44_00_02.root/pduneana/beamana");
+chain->Add("/pnfs/dune/tape_backed/dunepro/protodune-sp/root-tuple/2022/mc/physics/PDSPProd4a/24/36/15/40/PDSPProd4a_MC_6GeV_Set06_reco1_sce_off_v1_ntuple_v09_44_00_02.root/pduneana/beamana");
+chain->Add("/pnfs/dune/tape_backed/dunepro/protodune-sp/root-tuple/2022/mc/physics/PDSPProd4a/24/37/08/28/PDSPProd4a_MC_6GeV_Set07_reco1_sce_off_v1_ntuple_v09_44_00_02.root/pduneana/beamana");
+chain->Add("/pnfs/dune/tape_backed/dunepro/protodune-sp/root-tuple/2022/mc/physics/PDSPProd4a/24/37/49/65/PDSPProd4a_MC_6GeV_Set08_reco1_sce_off_v1_ntuple_v09_44_00_02.root/pduneana/beamana");
+chain->Add("/pnfs/dune/tape_backed/dunepro/protodune-sp/root-tuple/2022/mc/physics/PDSPProd4a/24/37/98/72/PDSPProd4a_MC_6GeV_Set09_reco1_sce_off_v1_ntuple_v09_44_00_02.root/pduneana/beamana");
+chain->Add("/pnfs/dune/tape_backed/dunepro/protodune-sp/root-tuple/2022/mc/physics/PDSPProd4a/47/62/65/77/PDSPProd4a_MC_6GeV_Set04_reco1_sce_off_v1_ntuple_v09_44_00_02.root/pduneana/beamana");
+
+
+
+
+
+
+
+
+
+
+ //chain->Add("/pduneana/beamana");
+
+    tree = chain;
+
+}
    Init(tree);
 }
 

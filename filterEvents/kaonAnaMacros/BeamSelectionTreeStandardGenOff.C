@@ -108,7 +108,7 @@ if(PDG==211) fileString="pion";
 if(PDG==2212) fileString="proton";
 TFile *fout = new TFile(Form("/dune/data/users/rdiurba/offStandard6GeV%sTreeSel.root",fileString.c_str()),"RECREATE");
 TTree tree("ana","anaTree");
-    int selection_ID=0; int sample_ID=0;
+     int selection_ID=0; int sample_ID=0; int selection_ID_old=0;
 double beam_inst_KE=0;
 double reco_beam_dCos=-10, reco_beam_dirCos=-10, reco_beam_zEndPointCos=-10;
 double reco_beam_cosXZ=-10, reco_beam_cosYZ=-10;
@@ -124,6 +124,9 @@ double true_beam_mass=493.677;
 int reco_beam_daughter_sameID=0;
 double true_beam_len=-999;
 double reco_beam_diffXY=-999;
+double beam_inst_XY=-999;
+double true_beam_traj_Eff=-999;
+double true_beam_startKE=-999;
 tree.Branch("event",&event);
 tree.Branch("subrun",&subrun);
 tree.Branch("run",&run);
@@ -134,9 +137,14 @@ tree.Branch("reco_beam_true_byHits_ID",&reco_beam_true_byHits_ID,"reco_beam_true
 tree.Branch("true_beam_ID",&true_beam_ID,"true_beam_ID/I");
 tree.Branch("true_beam_PDG",&true_beam_PDG,"true_beam_PDG/I");
 tree.Branch("true_beam_endP",&true_beam_endP,"true_beam_endP/D");
+tree.Branch("true_beam_endPz",&true_beam_endPz,"true_beam_endz/D");
+tree.Branch("true_beam_endPy",&true_beam_endPy,"true_beam_endPy/D");
+tree.Branch("true_beam_endPx",&true_beam_endPx,"true_beam_endPx/D");
 tree.Branch("true_beam_startP",&true_beam_startP,"true_beam_startP/D");
+tree.Branch("true_beam_startKE",&true_beam_startKE,"true_beam_startKE/D");
 tree.Branch("true_beam_mass",&true_beam_mass,"true_beam_mass/D");
 tree.Branch("selection_ID",&selection_ID,"selection_ID/I");
+tree.Branch("selection_ID_old",&selection_ID_old,"selection_ID_old/I");
 tree.Branch("sample_ID",&sample_ID,"sample_ID/I");
 
 tree.Branch("reco_beam_daughter_sameID",&reco_beam_daughter_sameID,"reco_beam_daughter_sameID/I");
@@ -181,10 +189,8 @@ tree.Branch("reco_beam_len",&reco_beam_len, "reco_beam_len/D");
 tree.Branch("reco_beam_alt_len",&reco_beam_alt_len, "reco_beam_alt_len/D");
 tree.Branch("reco_beam_true_byE_endProcess",&reco_beam_true_byE_endProcess);
 tree.Branch("true_beam_endProcess",&true_beam_endProcess);
-tree.Branch("reco_beam_dEdX_NoSCE",&reco_beam_dEdX_NoSCE);
-tree.Branch("reco_beam_calibrated_dEdX_NoSCE",&reco_beam_calibrated_dEdX_NoSCE);
-tree.Branch("reco_beam_dEdX_SCE",&reco_beam_dEdX_SCE);
 tree.Branch("reco_beam_calibrated_dEdX_SCE",&reco_beam_calibrated_dEdX_SCE);
+tree.Branch("reco_beam_dEdX_SCE",&reco_beam_dEdX_SCE);
 tree.Branch("true_beam_incidentEnergies",&true_beam_incidentEnergies);
 tree.Branch("reco_beam_incidentEnergies",&reco_beam_incidentEnergies);
 tree.Branch("reco_beam_TrkPitch_SCE",&reco_beam_TrkPitch_SCE);
@@ -194,15 +200,16 @@ tree.Branch("true_beam_slices",&true_beam_slices);
 tree.Branch("true_beam_slices_dE",&true_beam_slices_deltaE);
 tree.Branch("beam_inst_KE",&beam_inst_KE,"beam_inst_KE/D");
 tree.Branch("beam_inst_P",&beam_inst_P,"beam_inst_P/D");
-
-tree.Branch("beam_inst_X",&beam_inst_X,"beam_inst_X/D");
-tree.Branch("beam_inst_Y",&beam_inst_Y,"beam_inst_Y/D");
-tree.Branch("beam_inst_Z",&beam_inst_Z,"beam_inst_Z/D");
-tree.Branch("beam_inst_dirX",&beam_inst_dirX,"beam_inst_dirX/D");
-tree.Branch("beam_inst_dirY",&beam_inst_dirY,"beam_inst_dirY/D");
+tree.Branch("reco_beam_true_byE_startP",&reco_beam_true_byE_startP,"reco_beam_true_byE_startP/D");
+tree.Branch("reco_beam_true_byHits_startP",&reco_beam_true_byHits_startP,"reco_beam_true_byHits_startP/D");
+	tree.Branch("beam_inst_X",&beam_inst_X,"beam_inst_X/D");
+	tree.Branch("beam_inst_Y",&beam_inst_Y,"beam_inst_Y/D");
+	tree.Branch("beam_inst_Z",&beam_inst_Z,"beam_inst_Z/D");
+	tree.Branch("beam_inst_dirX",&beam_inst_dirX,"beam_inst_dirX/D");
+	tree.Branch("beam_inst_dirY",&beam_inst_dirY,"beam_inst_dirY/D");
 tree.Branch("beam_inst_dirZ",&beam_inst_dirZ,"beam_inst_dirZ/D");
 tree.Branch("reco_beam_diffXY",&reco_beam_diffXY,"reco_beam_diffXY/D");
-
+tree.Branch("beam_inst_XY",&beam_inst_XY,"beam_inst_XY/D");
 tree.Branch("reco_beam_dCos",&reco_beam_dCos,"reco_beam_dCos/D");
 tree.Branch("reco_beam_dirCos",&reco_beam_dirCos,"reco_beam_dirCos/D");
 tree.Branch("reco_beam_zEndPointCos",&reco_beam_zEndPointCos,"reco_beam_zEndPointCos/D");
@@ -222,7 +229,14 @@ tree.Branch("reco_daughter_PFP_true_nDaughters",&reco_daughter_PFP_true_nDaughte
 tree.Branch("reco_daughter_PFP_true_byHits_process",&reco_daughter_PFP_true_byHits_process);
 tree.Branch("reco_beam_calibrated_interactingEnergy",&reco_beam_calibrated_interactingEnergy);
 tree.Branch("reco_beam_calibrated_incidentEnergies",&reco_beam_calibrated_incidentEnergies);
-
+tree.Branch("reco_beam_calo_startZ",&reco_beam_calo_startZ);
+tree.Branch("reco_beam_calo_endZ",&reco_beam_calo_endZ);
+tree.Branch("true_beam_daughter_startP",&true_beam_daughter_startP);
+tree.Branch("true_beam_daughter_startPx",&true_beam_daughter_startPx);
+tree.Branch("true_beam_daughter_startPy",&true_beam_daughter_startPy);
+tree.Branch("true_beam_daughter_startPz",&true_beam_daughter_startPz);
+tree.Branch("true_beam_daughter_PDG",&true_beam_daughter_PDG);
+tree.Branch("true_beam_daughter_len",&true_beam_daughter_len);
 tree.Branch("true_beam_nElasticScatters",&true_beam_nElasticScatters);
 tree.Branch("true_beam_elastic_costheta",&true_beam_elastic_costheta);
 tree.Branch("true_beam_elastic_X",&true_beam_elastic_X);
@@ -239,7 +253,7 @@ tree.Branch("reco_daughter_allTrack_endX",&reco_daughter_allTrack_endX);
 tree.Branch("reco_daughter_allTrack_endY",&reco_daughter_allTrack_endY);
 tree.Branch("reco_daughter_allTrack_endZ",&reco_daughter_allTrack_endZ);
 
-
+tree.Branch("reco_daughter_PFP_true_byHits_len",&reco_daughter_PFP_true_byHits_len);
 tree.Branch("reco_daughter_PFP_true_byHits_startX",&reco_daughter_PFP_true_byHits_startX);
 tree.Branch("reco_daughter_PFP_true_byHits_startY",&reco_daughter_PFP_true_byHits_startY);
 tree.Branch("reco_daughter_PFP_true_byHits_startZ",&reco_daughter_PFP_true_byHits_startZ);
@@ -251,6 +265,7 @@ tree.Branch("true_beam_traj_incidentEnergies",&true_beam_traj_incidentEnergies);
 tree.Branch("true_beam_traj_interactingEnergy",&true_beam_traj_interactingEnergy);
 tree.Branch("true_beam_traj_slice_z",&true_beam_traj_slice_z);
 tree.Branch("true_beam_traj_slice_index",&true_beam_traj_slice_index);
+tree.Branch("true_beam_traj_Eff",&true_beam_traj_Eff,"true_beam_traj_Eff/D");
 //tree.Branch("g4rw_p1",&g4rw_p1);
 tree.Branch("g4rw_full_grid_kplus_weights",&g4rw_full_grid_kplus_weights);
 tree.Branch("g4rw_full_grid_kplus_coeffs",&g4rw_full_grid_kplus_coeffs);   
@@ -266,6 +281,7 @@ Long64_t nbytes = 0, nb = 0;
     double dZ=reco_beam_endZ-reco_beam_startZ;
     double dX=reco_beam_endX-reco_beam_startX;
     double dY=reco_beam_endY-reco_beam_startY;
+   beam_inst_XY=TMath::Sqrt(TMath::Power(beam_inst_X+28.98,2)+TMath::Power(beam_inst_Y-421.7,2));
    beam_inst_P=beam_inst_P*6.f;
    TVector3 vec(dX, dY, dZ);
    true_beam_traj_incidentEnergies->clear();
@@ -273,7 +289,8 @@ Long64_t nbytes = 0, nb = 0;
    true_beam_traj_slice_z->clear();
    true_beam_traj_slice_index->clear();
    reco_beam_calibrated_interactingEnergy=-999;
-   TVector3 vhat=vec.Unit();
+   true_beam_traj_Eff=-999;
+    TVector3 vhat=vec.Unit();
     reco_beam_zEndPointCos=vhat(2);
     trklen=TMath::Sqrt(dX*dX+dY*dY+dZ*dZ);
      
@@ -288,6 +305,7 @@ Long64_t nbytes = 0, nb = 0;
       }
     // trklen=reco_beam_len;
     beam_inst_KE=1000.f*(TMath::Sqrt(beam_inst_P*beam_inst_P+0.493*0.493)-0.493);
+   true_beam_startKE=1000.f*(TMath::Sqrt(true_beam_startP*true_beam_startP+0.493*0.493)-0.493);
 //double totalEvent=0;
 std::string inelProcess="kaon+Inelastic";
    if(PDG==211){
@@ -311,17 +329,28 @@ inelProcess="protonInelastic";
        reco_beam_cosYZ=(reco_beam_endZ-reco_beam_startZ)/(reco_beam_endY-reco_beam_startY);
    
    if (beam_inst_P<4 || beam_inst_P>8) continue;
-   if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1 ) selection_ID=4;
+   if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1 ) selection_ID=5;
   // if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1) continue;
-   else if (abs(reco_beam_dCos)<0.997 || reco_beam_dCos>1.0 || abs(beam_inst_Y-reco_beam_startY+0.59)>0.9 || abs(beam_inst_Z-reco_beam_startZ+0.3)>0.9 || abs(beam_inst_X-reco_beam_startX-1.65)>0.75 || abs(reco_beam_diffXY-1.78)>0.75) selection_ID=3;
+      else if (reco_beam_endZ<51.8865) selection_ID=4;
+   else if (abs(reco_beam_dCos)<0.98739 || reco_beam_dCos>0.99737 || abs(beam_inst_Y-reco_beam_startY+0.3339)>0.8682 || abs(beam_inst_Z-reco_beam_startZ+29.6143)>1.216  || abs(beam_inst_X-reco_beam_startX-0.04133)>0.7698 || abs(reco_beam_diffXY-0.4308)>0.6864) selection_ID=3;
    else if (reco_beam_endZ>220.0) selection_ID=2;
    else if (reco_beam_zEndPointCos<.99 && reco_beam_zEndPointCos>0.87) selection_ID=1;
    else{ selection_ID=1;
 
      }
 
-   if (true_beam_endZ<0) sample_ID=3;
-   else if(true_beam_endZ>226.0) sample_ID=2;
+
+   if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1 ) selection_ID_old=4;
+  // if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1) continue;
+   else if (abs(reco_beam_dCos)<0.9870 || reco_beam_dCos>0.9976 || abs(beam_inst_Y-reco_beam_startY+0.3350)>0.8898 || abs(beam_inst_Z-reco_beam_startZ+29.6179)>1.2522  || abs(beam_inst_X-reco_beam_startX-0.04358)>0.7817 || abs(reco_beam_diffXY-0.4314)>0.7106) selection_ID_old=3;
+   else if (reco_beam_endZ>220.0) selection_ID_old=2;
+   else if (reco_beam_zEndPointCos<.99 && reco_beam_zEndPointCos>0.87) selection_ID_old=1;
+   else{ selection_ID_old=1;
+
+     }
+
+   if (true_beam_endZ<30) sample_ID=3;
+   else if(true_beam_endZ>222.1056) sample_ID=2;
    else if(true_beam_endProcess->find("kaon+Inelastic")!=std::string::npos ){
    sample_ID=1;
 
@@ -357,7 +386,7 @@ double currentdEdx=BetheBloch(beam_inst_KE, 493.67);
 std::vector<double> copyCalibrated=*reco_beam_calibrated_dEdX_SCE;
 for(long unsigned int index=0; index<reco_beam_calibrated_dEdX_SCE->size(); ++index){
 
-if (reco_beam_calibrated_dEdX_SCE->at(index)>5 || reco_beam_calibrated_dEdX_SCE->at(index)<0){
+if (reco_beam_calibrated_dEdX_SCE->at(index)>20 || reco_beam_calibrated_dEdX_SCE->at(index)<0){
 interactingKE=interactingKE-currentdEdx*reco_beam_TrkPitch_SCE->at(index);
 if(index<reco_beam_calibrated_dEdX_SCE->size()-1) reco_beam_calibrated_incidentEnergies->push_back(interactingKE);
 }
@@ -401,16 +430,18 @@ std::cout<<"End point: "<<true_beam_endZ<<','<<true_beam_slices->at(true_beam_sl
 
 }
     }
-    for (size_t j = 1; j < true_beam_traj_Z->size()-1 ; ++j) {
+  
+   //true_beam_traj_Eff=true_beam_traj_KE->at(0); 
+   for (size_t j = 1; j < true_beam_traj_Z->size()-1 ; ++j) {
       double z = true_beam_traj_Z->at(j);
       double x = true_beam_traj_X->at(j);
       double y = true_beam_traj_Y->at(j);
       double ke = true_beam_traj_KE->at(j);
-
+      
       if (z < fTrajZStart) {
         continue;
       }
-
+      if (z>fTrajZStart && z<(fTrajZStart+fPitch)) true_beam_traj_Eff=ke; 
       if (z >= next_slice_z) {
         double temp_z = true_beam_traj_Z->at(j-1);
         double temp_y = true_beam_traj_Y->at(j-1);
@@ -439,7 +470,7 @@ std::cout<<"End point: "<<true_beam_endZ<<','<<true_beam_slices->at(true_beam_sl
       }
     }
 //if(selection_ID==1 && true_beam_ID==reco_beam_true_byE_ID)  std::cout<<true_beam_len<<","<<true_beam_endZ<<','<<reco_beam_alt_len<<','<<reco_beam_endZ<<std::endl;    
-   
+    
    true_beam_traj_interactingEnergy= sqrt(true_beam_endP*true_beam_endP*1.e6 + 493.677*493.677) - 493.677;
   // std::cout<<true_beam_traj_interactingEnergy<<std::endl;
    tree.Fill();

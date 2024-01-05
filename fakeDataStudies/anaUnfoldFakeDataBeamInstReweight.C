@@ -1,13 +1,13 @@
-#define anaUnfoldTrainingStandard_ChangeIndep_cxx
-#include "anaUnfoldTrainingStandard_ChangeIndep.h"
+#define anaUnfoldFakeDataBeamInstReweight_cxx
+#include "anaUnfoldFakeDataBeamInstReweight.h"
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
 
 #include "RooUnfoldResponse.h"
 #include "RooUnfoldBayes.h"
-#include "TDecompChol.h"
 #include "TRandom.h"
+#include "TDecompChol.h"
 
 #include "TH1.h"
 #include "TGraph.h"
@@ -91,11 +91,11 @@ auto densityEffect = [](long double beta, double gamma){
 
 
 
-void anaUnfoldTrainingStandard_ChangeIndep::Loop()
+void anaUnfoldFakeDataBeamInstReweight::Loop(double coeff, int limit)
 {
 //   In a ROOT session, you can do:
-//      root> .L anaUnfoldTrainingStandard_ChangeIndep.C
-//      root> anaUnfoldTrainingStandard_ChangeIndep t
+//      root> .L anaUnfoldFakeDataBeamInstReweight.C
+//      root> anaUnfoldFakeDataBeamInstReweight t
 //      root> t.GetEntry(12); // Fill t data members with entry number 12
 //      root> t.Show();       // Show values of entry 12
 //      root> t.Show(16);     // Read and show values of entry 16
@@ -119,19 +119,22 @@ void anaUnfoldTrainingStandard_ChangeIndep::Loop()
    if (fChain == 0) return;
 
    Long64_t nentries = fChain->GetEntriesFast();
-
+int g4rw_index=coeff*10-1;
 double eBin = 200.;
 //double minE=2000;
 //double maxE=8000;
 int fSliceCut=1460;
+//fSliceCut=480;
 //double range=maxE-minE;
 //int totBins=(range)/eBin;
-
 int totBins=4;
 //double edges[7]={3000,5000,5200,5400,5600,5900,6800};
 //double edges[6]={4000,5000,5240,5440,5700,6650};
 //double edges[6]={4480,4980,5220,5410,5630,6200};
 double edges[5]={4480,5080,5340,5610,6170};
+
+TFile fTruth("/dune/data/users/rdiurba/rootDump/kaon_cross_section_out.root");
+TGraph* g4Truth=(TGraph*)fTruth.Get("inel_KE");
 //RooUnfoldResponse::UseOverflow();
 
 TH1D* h1d_true_thinslice_incidentE=new TH1D("h1d_true_incidentE","h1d_true_incidentE",totBins, edges);
@@ -150,10 +153,9 @@ response.UseOverflow();
 responseIncident.UseOverflow();
 std::cout<<response.UseOverflowStatus()<<std::endl;
    Long64_t nbytes = 0, nb = 0;
-   nentries=nentries;
-   for (Long64_t jentry=0.33*nentries+1; jentry<nentries;jentry++) {
-
-      Long64_t ientry = LoadTree(jentry);
+   nentries=nentries*0.66667;
+   for (Long64_t jentry=0; jentry<nentries;jentry++) {
+           Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
@@ -273,7 +275,7 @@ if ((index>=(true_beam_traj_slice_index->size()-1) || true_beam_PDG!=321 || true
 
 
    }
-TFile *fout = new TFile(Form("kaonUnfoldStandardGenTrainingRecoPlots_FlipIndep.root"),"RECREATE");
+TFile *fout = new TFile("kaonUnfoldFakeDataBeamInstReweight.root","RECREATE");
 
 std::cout<<h1d_reco_interactingE->GetEntries()<<std::endl;
       for (int i = 1; i <= h1d_reco_interactingE->GetNbinsX(); ++i) {
@@ -284,13 +286,15 @@ std::cout<<h1d_reco_interactingE->GetEntries()<<std::endl;
 TH1D* h1d_recoCopy_interactingE=(TH1D*)h1d_reco_interactingE->Clone("h1d_reco_copy_interactingE");
 TH1D* h1d_recoCopy_incidentE=(TH1D*)h1d_reco_incidentE->Clone("h1d_reco_copy_incidentE");
 RooUnfoldBayes unfoldCorr(&response, h1d_recoCopy_interactingE,4);
+unfoldCorr.Overflow();
 unfoldCorr.IncludeSystematics();
-unfoldCorr.SetNToys(1000);
+unfoldCorr.SetNToys(10000);
 
 TH1D* hRecoFullCorr=(TH1D*) unfoldCorr.Hreco(RooUnfold::kCovToy);
 RooUnfoldBayes unfoldInc(&responseIncident, h1d_recoCopy_incidentE,4);
+unfoldInc.Overflow();
 unfoldInc.IncludeSystematics();
-unfoldInc.SetNToys(1000);
+unfoldInc.SetNToys(10000);
 //RooUnfold::ErrorTreatment withError=3;
 TH1D* hRecoInc=(TH1D*)unfoldInc.Hreco(RooUnfold::kCovToy);
 hRecoInc->SetName("fullCorrIncHist");
@@ -365,24 +369,82 @@ std::vector<double>* reco_beam_calibrated_dEdX_SCE_data=0x0;
 std::vector<double>* reco_beam_TrkPitch_SCE_data=0x0;
 std::vector<double>* reco_beam_calo_Z_data=0x0;
 std::vector<double>* reco_beam_calo_wire_data=0x0;
+std::vector<double>* true_beam_daughter_startP_data=0x0;
+std::vector<double>* true_beam_daughter_startPx_data=0x0;
+std::vector<double>* true_beam_daughter_startPy_data=0x0;
+std::vector<double>* true_beam_daughter_startPz_data=0x0;
+std::vector<int>* true_beam_daughter_PDG_data=0x0;
+double true_beam_endP_data=-1;
+double true_beam_endPx_data=-1;
+double true_beam_endPy_data=-1;
+double true_beam_endPz_data=-1;
+double beam_inst_dirZ_data=0;
+Int_t true_beam_ID_data;
+Int_t reco_beam_true_byE_ID_data;
+Double_t true_beam_endZ_data;
+Double_t reco_beam_trackEndDirX_data;
+Double_t reco_beam_trackEndDirY_data;
+Double_t reco_beam_trackEndDirZ_data;
+std::vector<std::vector<double>>* g4rw_full_grid_kplus_weights=0x0;
 int selection_ID_data=0;
+std::string* true_beam_endProcess_data=0x0;
+t->SetBranchAddress("true_beam_endProcess",&true_beam_endProcess_data);
 t->SetBranchAddress("reco_beam_calibrated_interactingEnergy",&reco_beam_calibrated_interactingEnergy_data);
 t->SetBranchAddress("reco_beam_calibrated_dEdX_SCE",&reco_beam_calibrated_dEdX_SCE_data);
 t->SetBranchAddress("reco_beam_TrkPitch_SCE",&reco_beam_TrkPitch_SCE_data);
 t->SetBranchAddress("selection_ID",&selection_ID_data);
+t->SetBranchAddress("beam_inst_dirZ",&beam_inst_dirZ_data);
 t->SetBranchAddress("beam_inst_KE",&beam_inst_KE_data);
+t->SetBranchAddress("true_beam_endZ",&true_beam_endZ_data);
 t->SetBranchAddress("reco_beam_calo_Z",&reco_beam_calo_Z_data);
 t->SetBranchAddress("reco_beam_calo_wire",&reco_beam_calo_wire_data);
-   Long64_t nentries_start=0; //t->GetEntries()*0.66667+1;
-   Long64_t nentries_data=t->GetEntries()*0.333;
-TH1D* h1d_reco_interactingE_data=new TH1D("h1d_reco_interactingE_data","h1d_reco_interactingE_data",totBins, edges);;
-TH1D* h1d_reco_incidentE_data=new TH1D("h1d_reco_incidentE_data","h1d_reco_incidentE_data",totBins, edges);;
+t->SetBranchAddress("g4rw_full_grid_kplus_weights",&g4rw_full_grid_kplus_weights);
+t->SetBranchAddress("reco_beam_true_byE_ID",&reco_beam_true_byE_ID_data);
+t->SetBranchAddress("true_beam_ID",&true_beam_ID_data);
+t->SetBranchAddress("true_beam_daughter_PDG",&true_beam_daughter_PDG_data);
+t->SetBranchAddress("true_beam_daughter_startP",&true_beam_daughter_startP_data);
+t->SetBranchAddress("true_beam_daughter_startPy",&true_beam_daughter_startPy_data);
+t->SetBranchAddress("true_beam_daughter_startPz",&true_beam_daughter_startPz_data);
+t->SetBranchAddress("true_beam_daughter_startPx",&true_beam_daughter_startPx_data);
+t->SetBranchAddress("true_beam_daughter_startPy",&true_beam_daughter_startPy_data);
+std::vector<double>* true_beam_daughter_len_data=0x0;
+t->SetBranchAddress("true_beam_daughter_len",&true_beam_daughter_len_data);
+t->SetBranchAddress("true_beam_endP",&true_beam_endP_data);
+t->SetBranchAddress("true_beam_endPz",&true_beam_endPz_data);
+t->SetBranchAddress("true_beam_endPy",&true_beam_endPy_data);
+t->SetBranchAddress("true_beam_endPx",&true_beam_endPx_data);
+t->SetBranchAddress("reco_beam_trackEndDirX",&reco_beam_trackEndDirX_data);
+t->SetBranchAddress("reco_beam_trackEndDirY",&reco_beam_trackEndDirY_data);
+t->SetBranchAddress("reco_beam_trackEndDirZ",&reco_beam_trackEndDirZ_data);
+TFile fData("kaonTreeSelData.root");
+TTree* tData=(TTree*)fData.Get("ana");
+TH1D* dataDirZ=new TH1D("dataDirZ","dataDirZ",18,0.958,0.967);
+TH1D* mcDirZ=new TH1D("mcDirZ","mcZ",18,0.958,0.967);
+t->Project("mcDirZ","beam_inst_dirZ");
+tData->Project("dataDirZ","beam_inst_dirZ");
+dataDirZ->Scale(1.f/dataDirZ->GetEntries());
+mcDirZ->Scale(1.f/mcDirZ->GetEntries());
+dataDirZ->Divide(mcDirZ);
+for (int i=0; i<19; i++){std::cout<<dataDirZ->GetBinContent(i+1)<<std::endl;}
+
+
+   Long64_t nentries_data=t->GetEntries();
+   //Long64_t nentries_start=0;
+   Long64_t nentries_start=nentries_data*0.6667+1;
+TH1D* h1d_reco_interactingE_data=new TH1D("h1d_reco_interactingE_data","h1d_reco_interactingE_data",totBins, edges);
+TH1D* h1d_reco_incidentE_data=new TH1D("h1d_reco_incidentE_data","h1d_reco_incidentE_data",totBins, edges);
+ 
    for (Long64_t jentry=nentries_start; jentry<nentries_data;jentry++) {
-    t->GetEntry(jentry);
 
-  if (selection_ID_data==1) h1d_reco_interactingE_data->Fill(reco_beam_calibrated_interactingEnergy_data);
+   t->GetEntry(jentry);
+std::vector<double> tot_g4rw=g4rw_full_grid_kplus_weights->at(0);
+double weight=1.0;
+ weight=dataDirZ->GetBinContent(dataDirZ->FindBin(beam_inst_dirZ_data));
+ 
 
 
+if (selection_ID_data==1){ h1d_reco_interactingE_data->Fill(reco_beam_calibrated_interactingEnergy_data,weight);
+}
 if(selection_ID_data<3){
 h1d_reco_interactingE_passBQT_data->Fill(reco_beam_calibrated_interactingEnergy_data);
 
@@ -404,9 +466,7 @@ currentdEdx=reco_beam_calibrated_dEdX_SCE_data->at(index);
 interactingKE=interactingKE-currentdEdx*reco_beam_TrkPitch_SCE_data->at(index);
 }
 if(index<reco_beam_calibrated_dEdX_SCE_data->size()-1){
-
-
-if (reco_beam_calo_Z_data->at(index)<220.0 && reco_beam_calo_Z_data->at(index)>30.0) h1d_reco_incidentE_data->Fill(interactingKE);
+if (reco_beam_calo_Z_data->at(index)<220.0 && reco_beam_calo_Z_data->at(index)>30.0) h1d_reco_incidentE_data->Fill(interactingKE,weight);
 }
 
 }
@@ -416,15 +476,9 @@ if (reco_beam_calo_Z_data->at(index)<220.0 && reco_beam_calo_Z_data->at(index)>3
 
 
 
-      for (int i = 1; i <= h1d_reco_interactingE_data->GetNbinsX(); ++i) {
-     // h1d_reco_interactingE_data->SetBinError(i,TMath::Sqrt(h1d_reco_interactingE_data->GetBinContent(i)*(1-h1d_reco_interactingE_data->GetBinContent(i)/h1d_reco_incidentE_data->GetBinContent(i))));
-      }
 
-
-
-
-TH1D* h1d_recoCopy_interactingE_data=(TH1D*)h1d_reco_interactingE_data->Clone("h1d_reco_copy_interactingE_data");
-TH1D* h1d_recoCopy_incidentE_data=(TH1D*)h1d_reco_incidentE_data->Clone("h1d_reco_copy_incidentE_data");
+TH1D* h1d_recoCopy_interactingE_data=(TH1D*)h1d_reco_interactingE_data->Clone("h1d_reco_copy_interactingE_test");
+TH1D* h1d_recoCopy_incidentE_data=(TH1D*)h1d_reco_incidentE_data->Clone("h1d_reco_copy_incidentE_test");
 
 for(int k=0; k<h1d_recoCopy_interactingE_data->GetNbinsX(); k++){
 //h1d_recoCopy_interactingE_data->SetBinError(k+1,0);
@@ -439,10 +493,10 @@ R->SetStats(0);
 RooUnfoldBayes unfoldData(&response, h1d_recoCopy_interactingE_data,4);
 RooUnfoldBayes unfoldIncData(&responseIncident, h1d_recoCopy_incidentE_data,4);
 //unfoldData.SetVerbose(3);
-unfoldData.SetNToys(1000);
-unfoldIncData.SetNToys(1000);
-//unfoldData.IncludeSystematics(1);
-//unfoldIncData.IncludeSystematics(1);
+unfoldData.SetNToys(10000);
+unfoldIncData.SetNToys(10000);
+unfoldData.IncludeSystematics();
+unfoldIncData.IncludeSystematics();
 //unfoldData.SetVerbose(2);
 unfoldData.Overflow();
 unfoldIncData.Overflow();
@@ -465,7 +519,7 @@ erecoM.Print();
 hRecoFullData->SetName("fullCorrData");
 hRecoIncData->SetName("fullCorrIncData");
 
-       TH1D * xsec_data = (TH1D*)hRecoFullData->Clone("crossSectionData");
+       TH1D * xsec_data = (TH1D*)hRecoFullData->Clone("crossSectionTest");
       TH1D* h1d_true_thinslice_incidentE_scaled=(TH1D*)h1d_true_thinslice_incidentE->Clone("h1d_true_thinslice_incidentE_scaled");
       h1d_true_thinslice_incidentE_scaled->Scale(h1d_reco_interactingE_passBQT_data->Integral()/h1d_reco_interactingE_passBQT->Integral());
       std::cout<<hRecoFullData->Integral()/hRecoFullCorr->Integral()<<std::endl;
@@ -531,7 +585,7 @@ hRecoIncData->SetName("fullCorrIncData");
 
     }
 
-       TH1D * xsec_unfoldData = (TH1D*)hRecoFullData->Clone("crossSectionUnfoldData");
+       TH1D * xsec_unfoldData = (TH1D*)hRecoFullData->Clone("crossSectionUnfoldTest");
 
      xsec_unfoldData->Divide(hRecoIncData);
       for (int i = 1; i <= xsec_hist->GetNbinsX(); ++i) {
@@ -569,6 +623,14 @@ hRecoIncData->SetName("fullCorrIncData");
 
       }
       xsec_unfoldMC->Scale(1.E27/ (0.4979* 1.4 * 6.022E23 / 39.948 ));
+
+//std::cout<<unfoldData.GetSmoothing()<<std::endl;
+//std::cout<<unfoldData.GetRegParm()<<std::endl;
+//std::cout<<unfoldData.GetIterations()<<std::endl;
+//std::cout<<unfoldData.NToys()<<std::endl;
+//xsec_unfoldData->Fit("pol0","O");
+//xsec_unfoldMC->Fit("pol0","O");
+
 
 
 TH2D* covMat=new TH2D("covMatStat","covMatStat",totBins, edges , totBins, edges );
@@ -641,7 +703,7 @@ TH1D * xsec_unfoldDataFluc = (TH1D*)recoDataIntCopy->Clone("crossSectionUnfoldDa
 //std::cout<<recoMCIncCopy->GetBinContent(1)<<','<<recoMCIntCopy->GetBinContent(1)<<','<<recoDataIncCopy->GetBinContent(1)<<','<<recoDataIntCopy->GetBinContent(1)<<std::endl;
      xsec_unfoldMCFluc->Divide(recoMCIncCopy);
      xsec_unfoldDataFluc->Divide(recoDataIncCopy);
-  std::cout<<xsec_unfoldMCFluc->GetBinContent(1)<<','<<xsec_unfoldDataFluc->GetBinContent(1)<<std::endl;    
+ // std::cout<<xsec_unfoldMCFluc->GetBinContent(1)<<','<<xsec_unfoldDataFluc->GetBinContent(1)<<std::endl;    
 //std::cout<<recoMCIncCopy->GetBinContent(1)<<','<<recoMCIntCopy->GetBinContent(1)<<','<<recoDataIncCopy->GetBinContent(1)<<','<<recoDataIntCopy->GetBinContent(1)<<std::endl;
 
      for (int i = 1; i <= xsec_unfoldData->GetNbinsX(); ++i) {
@@ -730,29 +792,31 @@ double chi2Inc=0;
 double chi2XSec=0;
 for(int bin=0; bin<h1d_DataXSec->GetNbinsX(); ++bin){
     for(int bin2=0; bin2<h1d_DataXSec->GetNbinsX(); ++bin2){
-
+    double weight=1.f;
     
-    double diffBin1=h1d_DataXSec->GetBinContent(bin+1)-451;
-    double diffBin2=h1d_DataXSec->GetBinContent(bin2+1)-451;
+    double diffBin1=xsec_unfoldData->GetBinContent(bin+1)-weight*g4Truth->Eval(xsec_unfoldData->GetBinCenter(bin+1));
+    double diffBin2=xsec_unfoldData->GetBinContent(bin2+1)-weight*g4Truth->Eval(xsec_unfoldData->GetBinCenter(bin2+1));
 //    std::cout<<diffBin1<<","<<diffBin2<<","<<erecoData[bin][bin2]<<std::endl;
 
     double bin_cont=diffBin1*(new_matData)(bin,bin2)*diffBin2;
     chi2=chi2+bin_cont;
-    double diffIncBin1=h1d_MCXSec->GetBinContent(bin+1)-451;
-    double diffIncBin2=h1d_MCXSec->GetBinContent(bin2+1)-451;
+    double diffIncBin1=xsec_unfoldMC->GetBinContent(bin+1)-g4Truth->Eval(xsec_unfoldData->GetBinCenter(bin+1));
+    double diffIncBin2=xsec_unfoldMC->GetBinContent(bin2+1)-g4Truth->Eval(xsec_unfoldData->GetBinCenter(bin2+1));
     double binInc_cont=diffIncBin1*(new_matMC)(bin,bin2)*diffIncBin2;
    // std::cout<<""<<std::endl;
    //std::cout<<diffIncBin2<<","<<diffIncBin2<<","<<new_matMC(bin,bin2)<<std::endl;
 
 
-    chi2Inc=chi2Inc+binInc_cont;
+//    chi2Inc=chi2Inc+binInc_cont;
 
 
 }
 }
-std::cout<<"Chi (Data, Sim): "<<chi2<<","<<chi2Inc<<std::endl;
+std::cout<<chi2<<","<<chi2Inc<<std::endl;
 
+xsec_unfoldData->Fit("pol0","NO");
 
+xsec_unfoldData->SetTitle(Form("%1.1f",chi2));
 
 fout->cd();
 xsec_rawMC->Write();
@@ -780,7 +844,6 @@ h1d_DataInt->Write();
 
 R->Write();
 RInc->Write();
-
 
 
 }

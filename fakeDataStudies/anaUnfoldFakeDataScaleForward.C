@@ -184,7 +184,7 @@ double nobeam_weight=1;
 }
 double  weight=1.f;//nobeam_weight*ediv_weight;  
 
-if(true_beam_endZ>30 && true_beam_endZ<222.1056 && true_beam_endProcess->find("kaon+Inelastic")!=std::string::npos)  h1d_true_thinslice_interactingE->Fill(true_beam_traj_interactingEnergy);
+if(true_beam_endZ>30 && true_beam_endZ<220.0 && true_beam_endProcess->find("kaon+Inelastic")!=std::string::npos)  h1d_true_thinslice_interactingE->Fill(true_beam_traj_interactingEnergy);
    
    if (true_beam_traj_incidentEnergies->size()){
    // h1d_true_thinslice_incidentE->Fill(5000,true_beam_traj_incidentEnergies->size());
@@ -194,7 +194,7 @@ if(true_beam_endZ>30 && true_beam_endZ<222.1056 && true_beam_endProcess->find("k
         //int slice = (true_beam_traj_slice_index)->at(j);
         //if (slice>fSliceCut) continue; 
         //std::cout<<true_beam_traj_slice_z->at(j)<<std::endl;
-        if (true_beam_traj_slice_z->at(j)<30 || true_beam_traj_slice_z->at(j)>222.1056 )  continue;
+        if (true_beam_traj_slice_z->at(j)<30 || true_beam_traj_slice_z->at(j)>220.0 )  continue;
         h1d_true_thinslice_incidentE->Fill(true_beam_traj_incidentEnergies->at(j));
         if (selection_ID>2){ responseIncident.Miss(true_beam_traj_incidentEnergies->at(j),weight); 
 }
@@ -232,14 +232,14 @@ interactingKE=interactingKE-currentdEdx*reco_beam_TrkPitch_SCE->at(index);
 
 }
 if(index<reco_beam_calibrated_dEdX_SCE->size()-1){
-if (reco_beam_calo_wire_z->at(index)<51.8865 || reco_beam_calo_wire_z->at(index)>220.0) continue;
-if (reco_beam_calo_wire_z->at(index)>51.8865 && reco_beam_calo_wire_z->at(index)<220.0) h1d_reco_incidentE->Fill(interactingKE);
+if (reco_beam_calo_Z->at(index)<30.0 || reco_beam_calo_Z->at(index)>220.0) continue;
+if (reco_beam_calo_Z->at(index)>30.0 && reco_beam_calo_Z->at(index)<220.0) h1d_reco_incidentE->Fill(interactingKE);
 if (true_beam_traj_incidentEnergies->size()){
-if (index<(true_beam_slices->size()-1) && true_beam_PDG==321 && true_beam_ID==reco_beam_true_byE_ID && reco_beam_calo_wire_z->at(index)<220.0 && reco_beam_calo_wire_z->at(index)>51.8865) responseIncident.Fill(interactingKE,true_beam_traj_incidentEnergies->at(index),weight);
+if (index<(true_beam_slices->size()-1) && true_beam_PDG==321 && true_beam_ID==reco_beam_true_byE_ID && reco_beam_calo_Z->at(index)<220.0 && reco_beam_calo_Z->at(index)>30.0) responseIncident.Fill(interactingKE,true_beam_traj_incidentEnergies->at(index),weight);
 
 }
 if(!true_beam_traj_incidentEnergies->size()) responseIncident.Fake(interactingKE,weight);
-if ((index>=(true_beam_traj_slice_index->size()-1) || true_beam_PDG!=321 || true_beam_ID!=reco_beam_true_byE_ID) && reco_beam_calo_wire_z->at(index)>51.8865 && reco_beam_calo_wire_z->at(index)<220.0) responseIncident.Fake(interactingKE,weight);
+if ((index>=(true_beam_traj_slice_index->size()-1) || true_beam_PDG!=321 || true_beam_ID!=reco_beam_true_byE_ID) && reco_beam_calo_Z->at(index)>30.0 && reco_beam_calo_Z->at(index)<220.0) responseIncident.Fake(interactingKE,weight);
 }
 
 
@@ -253,7 +253,7 @@ if ((index>=(true_beam_traj_slice_index->size()-1) || true_beam_PDG!=321 || true
 
 
   h1d_reco_interactingE->Fill(reco_beam_calibrated_interactingEnergy);
-  if(true_beam_endZ>30 && true_beam_endZ<222.1056 && true_beam_endProcess->find("kaon+Inelastic")!=std::string::npos && reco_beam_true_byE_ID==true_beam_ID /* && reco_beam_daughter_sameID==0*/){ response.Fill(reco_beam_calibrated_interactingEnergy, true_beam_traj_interactingEnergy,weight);
+  if(true_beam_endZ>30 && true_beam_endZ<220.0 && true_beam_endProcess->find("kaon+Inelastic")!=std::string::npos && reco_beam_true_byE_ID==true_beam_ID /* && reco_beam_daughter_sameID==0*/){ response.Fill(reco_beam_calibrated_interactingEnergy, true_beam_traj_interactingEnergy,weight);
 
   h1d_reco_cheat_interactingE->Fill(reco_beam_calibrated_interactingEnergy);
   }
@@ -266,7 +266,7 @@ if ((index>=(true_beam_traj_slice_index->size()-1) || true_beam_PDG!=321 || true
 
 
   else{
-  if (true_beam_endZ>30  && true_beam_endZ<222.1056 && true_beam_endProcess->find("kaon+Inelastic")!=std::string::npos){ response.Miss(true_beam_traj_interactingEnergy,weight);
+  if (true_beam_endZ>30  && true_beam_endZ<220.0 && true_beam_endProcess->find("kaon+Inelastic")!=std::string::npos){ response.Miss(true_beam_traj_interactingEnergy,weight);
 
 }
 
@@ -367,7 +367,7 @@ double reco_beam_calibrated_interactingEnergy_data=0;
 double beam_inst_KE_data=0;
 std::vector<double>* reco_beam_calibrated_dEdX_SCE_data=0x0;
 std::vector<double>* reco_beam_TrkPitch_SCE_data=0x0;
-std::vector<double>* reco_beam_calo_wire_z_data=0x0;
+std::vector<double>* reco_beam_calo_Z_data=0x0;
 std::vector<double>* reco_beam_calo_wire_data=0x0;
 std::vector<double>* true_beam_daughter_startP_data=0x0;
 std::vector<double>* true_beam_daughter_startPx_data=0x0;
@@ -394,7 +394,7 @@ t->SetBranchAddress("reco_beam_TrkPitch_SCE",&reco_beam_TrkPitch_SCE_data);
 t->SetBranchAddress("selection_ID",&selection_ID_data);
 t->SetBranchAddress("beam_inst_KE",&beam_inst_KE_data);
 t->SetBranchAddress("true_beam_endZ",&true_beam_endZ_data);
-t->SetBranchAddress("reco_beam_calo_wire_z",&reco_beam_calo_wire_z_data);
+t->SetBranchAddress("reco_beam_calo_Z",&reco_beam_calo_Z_data);
 t->SetBranchAddress("reco_beam_calo_wire",&reco_beam_calo_wire_data);
 t->SetBranchAddress("g4rw_full_grid_kplus_weights",&g4rw_full_grid_kplus_weights);
 t->SetBranchAddress("reco_beam_true_byE_ID",&reco_beam_true_byE_ID_data);
@@ -429,7 +429,7 @@ TH1D* h1d_reco_incidentE_data=new TH1D("h1d_reco_incidentE_data","h1d_reco_incid
 
    t->GetEntry(jentry);
          double leadingAngle=-100;
-        if (true_beam_endZ_data>30 && true_beam_endZ_data<222.1056 && true_beam_endProcess_data->find("kaon+Inelastic")!=std::string::npos) {
+        if (true_beam_endZ_data>30 && true_beam_endZ_data<220.0 && true_beam_endProcess_data->find("kaon+Inelastic")!=std::string::npos) {
         int numPart=0;
         int numKaon=0;
         for(long unsigned int i=0; i<true_beam_daughter_PDG_data->size(); i++){
@@ -464,7 +464,7 @@ double weight=1.0;
 double leadingAngle=-100;
 int numPart=0;
 int numKaon=0;
-        if (true_beam_endZ_data>30 && true_beam_endZ_data<222.1056 && true_beam_endProcess_data->find("kaon+Inelastic")!=std::string::npos) {        
+        if (true_beam_endZ_data>30 && true_beam_endZ_data<220.0 && true_beam_endProcess_data->find("kaon+Inelastic")!=std::string::npos) {        
 for(long unsigned int i=0; i<true_beam_daughter_PDG_data->size(); i++){
            if (abs(true_beam_daughter_PDG_data->at(i))!=321 && abs(true_beam_daughter_PDG_data->at(i))!=2212 && abs(true_beam_daughter_PDG_data->at(i))!=13 && abs(true_beam_daughter_PDG_data->at(i))!=211) continue;
            if (true_beam_daughter_len_data->at(i)<1.0) continue;
@@ -481,10 +481,10 @@ for(long unsigned int i=0; i<true_beam_daughter_PDG_data->size(); i++){
 
 }
 
-//if ( true_beam_endZ_data>30 && true_beam_endZ_data<222.1056 && true_beam_endProcess->find("kaon+Inelastic")!=std::string::npos) weight=weightLeadingAngle->Interpolate(leadingAngle);
+//if ( true_beam_endZ_data>30 && true_beam_endZ_data<220.0 && true_beam_endProcess->find("kaon+Inelastic")!=std::string::npos) weight=weightLeadingAngle->Interpolate(leadingAngle);
 
-if (numPart==limit && numKaon==1 && leadingAngle>0.995 && true_beam_endZ_data>30 && true_beam_endZ_data<222.1056 && true_beam_endProcess_data->find("kaon+Inelastic")!=std::string::npos) weight=coeff;
-else if(numPart==limit && numKaon==1 && true_beam_endZ_data>30 && true_beam_endZ_data<222.1056 && true_beam_endProcess_data->find("kaon+Inelastic")!=std::string::npos) weight=(1-coeff*histLeadingAngle->GetBinContent(20)/histLeadingAngle->GetEntries())/(1-histLeadingAngle->GetBinContent(20)/histLeadingAngle->GetEntries());
+if ( numKaon==1 && leadingAngle>0.995 && true_beam_endZ_data>30 && true_beam_endZ_data<220.0 && true_beam_endProcess_data->find("kaon+Inelastic")!=std::string::npos) weight=coeff;
+else if( numKaon==1 && true_beam_endZ_data>30 && true_beam_endZ_data<220.0 && true_beam_endProcess_data->find("kaon+Inelastic")!=std::string::npos) weight=(1-coeff*histLeadingAngle->GetBinContent(20)/histLeadingAngle->GetEntries())/(1-histLeadingAngle->GetBinContent(20)/histLeadingAngle->GetEntries());
 
 
 if (weight<0) weight=0.0000;
@@ -520,7 +520,7 @@ currentdEdx=reco_beam_calibrated_dEdX_SCE_data->at(index);
 interactingKE=interactingKE-currentdEdx*reco_beam_TrkPitch_SCE_data->at(index);
 }
 if(index<reco_beam_calibrated_dEdX_SCE_data->size()-1){
-if (reco_beam_calo_wire_z_data->at(index)<220.0 && reco_beam_calo_wire_z_data->at(index)>51.8865) h1d_reco_incidentE_data->Fill(interactingKE,weight);
+if (reco_beam_calo_Z_data->at(index)<220.0 && reco_beam_calo_Z_data->at(index)>30.0) h1d_reco_incidentE_data->Fill(interactingKE,weight);
 }
 
 }

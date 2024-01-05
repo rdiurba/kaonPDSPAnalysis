@@ -5,8 +5,8 @@
 // found on file: kaonAnaMacros/kaonTreeSel.root
 //////////////////////////////////////////////////////////
 
-#ifndef anaUnfoldFakeDataScaleForward_h
-#define anaUnfoldFakeDataScaleForward_h
+#ifndef anaUnfoldFakeDataBeamInstReweight_h
+#define anaUnfoldFakeDataBeamInstReweight_h
 
 #include <TROOT.h>
 #include <TChain.h>
@@ -18,7 +18,7 @@
 #include "vector"
 #include "vector"
 
-class anaUnfoldFakeDataScaleForward {
+class anaUnfoldFakeDataBeamInstReweight {
 public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
    Int_t           fCurrent; //!current Tree number in a TChain
@@ -211,8 +211,8 @@ public :
    TBranch        *b_true_beam_traj_slice_z;   //!
    TBranch        *b_true_beam_traj_slice_index;   //!
 
-   anaUnfoldFakeDataScaleForward(TTree *tree=0);
-   virtual ~anaUnfoldFakeDataScaleForward();
+   anaUnfoldFakeDataBeamInstReweight(TTree *tree=0);
+   virtual ~anaUnfoldFakeDataBeamInstReweight();
    virtual Int_t    Cut(Long64_t entry);
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
@@ -224,8 +224,8 @@ public :
 
 #endif
 
-#ifdef anaUnfoldFakeDataScaleForward_cxx
-anaUnfoldFakeDataScaleForward::anaUnfoldFakeDataScaleForward(TTree *tree) : fChain(0) 
+#ifdef anaUnfoldFakeDataBeamInstReweight_cxx
+anaUnfoldFakeDataBeamInstReweight::anaUnfoldFakeDataBeamInstReweight(TTree *tree) : fChain(0) 
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
@@ -240,19 +240,19 @@ anaUnfoldFakeDataScaleForward::anaUnfoldFakeDataScaleForward(TTree *tree) : fCha
    Init(tree);
 }
 
-anaUnfoldFakeDataScaleForward::~anaUnfoldFakeDataScaleForward()
+anaUnfoldFakeDataBeamInstReweight::~anaUnfoldFakeDataBeamInstReweight()
 {
    if (!fChain) return;
    delete fChain->GetCurrentFile();
 }
 
-Int_t anaUnfoldFakeDataScaleForward::GetEntry(Long64_t entry)
+Int_t anaUnfoldFakeDataBeamInstReweight::GetEntry(Long64_t entry)
 {
 // Read contents of entry.
    if (!fChain) return 0;
    return fChain->GetEntry(entry);
 }
-Long64_t anaUnfoldFakeDataScaleForward::LoadTree(Long64_t entry)
+Long64_t anaUnfoldFakeDataBeamInstReweight::LoadTree(Long64_t entry)
 {
 // Set the environment to read one entry
    if (!fChain) return -5;
@@ -265,7 +265,7 @@ Long64_t anaUnfoldFakeDataScaleForward::LoadTree(Long64_t entry)
    return centry;
 }
 
-void anaUnfoldFakeDataScaleForward::Init(TTree *tree)
+void anaUnfoldFakeDataBeamInstReweight::Init(TTree *tree)
 {
    // The Init() function is called when the selector needs to initialize
    // a new tree or chain. Typically here the branch addresses and branch
@@ -414,7 +414,7 @@ void anaUnfoldFakeDataScaleForward::Init(TTree *tree)
    Notify();
 }
 
-Bool_t anaUnfoldFakeDataScaleForward::Notify()
+Bool_t anaUnfoldFakeDataBeamInstReweight::Notify()
 {
    // The Notify() function is called when a new file is opened. This
    // can be either for a new TTree in a TChain or when when a new TTree
@@ -425,18 +425,18 @@ Bool_t anaUnfoldFakeDataScaleForward::Notify()
    return kTRUE;
 }
 
-void anaUnfoldFakeDataScaleForward::Show(Long64_t entry)
+void anaUnfoldFakeDataBeamInstReweight::Show(Long64_t entry)
 {
 // Print contents of entry.
 // If entry is not specified, print current entry
    if (!fChain) return;
    fChain->Show(entry);
 }
-Int_t anaUnfoldFakeDataScaleForward::Cut(Long64_t entry)
+Int_t anaUnfoldFakeDataBeamInstReweight::Cut(Long64_t entry)
 {
 // This function may be called from Loop.
 // returns  1 if entry is accepted.
 // returns -1 otherwise.
    return 1;
 }
-#endif // #ifdef anaUnfoldFakeDataScaleForward_cxx
+#endif // #ifdef anaUnfoldFakeDataBeamInstReweight_cxx

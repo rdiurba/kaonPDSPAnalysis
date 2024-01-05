@@ -67,7 +67,7 @@ public :
    vector<double>  *reco_beam_incidentEnergies;
    vector<double>  *reco_beam_TrkPitch_SCE;
    vector<double>  *reco_beam_calo_wire;
-   vector<double>  *reco_beam_calo_wire_z;
+   vector<double>  *reco_beam_calo_Z;
    vector<int>     *true_beam_slices;
    vector<double>  *true_beam_slices_dE;
    Double_t        beam_inst_KE;
@@ -160,7 +160,7 @@ public :
    TBranch        *b_reco_beam_incidentEnergies;   //!
    TBranch        *b_reco_beam_TrkPitch_SCE;   //!
    TBranch        *b_reco_beam_calo_wire;   //!
-   TBranch        *b_reco_beam_calo_wire_z;   //!
+   TBranch        *b_reco_beam_calo_Z;   //!
    TBranch        *b_true_beam_slices;   //!
    TBranch        *b_true_beam_slices_dE;   //!
    TBranch        *b_beam_inst_KE;   //!
@@ -283,7 +283,7 @@ void anaUnfoldFakeDataFlatAngle::Init(TTree *tree)
    reco_beam_incidentEnergies = 0;
    reco_beam_TrkPitch_SCE = 0;
    reco_beam_calo_wire = 0;
-   reco_beam_calo_wire_z = 0;
+   reco_beam_calo_Z = 0;
    true_beam_slices = 0;
    true_beam_slices_dE = 0;
    true_beam_traj_Z = 0;
@@ -361,7 +361,7 @@ void anaUnfoldFakeDataFlatAngle::Init(TTree *tree)
    fChain->SetBranchAddress("reco_beam_incidentEnergies", &reco_beam_incidentEnergies, &b_reco_beam_incidentEnergies);
    fChain->SetBranchAddress("reco_beam_TrkPitch_SCE", &reco_beam_TrkPitch_SCE, &b_reco_beam_TrkPitch_SCE);
    fChain->SetBranchAddress("reco_beam_calo_wire", &reco_beam_calo_wire, &b_reco_beam_calo_wire);
-   fChain->SetBranchAddress("reco_beam_calo_wire_z", &reco_beam_calo_wire_z, &b_reco_beam_calo_wire_z);
+   fChain->SetBranchAddress("reco_beam_calo_Z", &reco_beam_calo_Z, &b_reco_beam_calo_Z);
    fChain->SetBranchAddress("true_beam_slices", &true_beam_slices, &b_true_beam_slices);
    fChain->SetBranchAddress("true_beam_slices_dE", &true_beam_slices_dE, &b_true_beam_slices_dE);
    fChain->SetBranchAddress("beam_inst_KE", &beam_inst_KE, &b_beam_inst_KE);

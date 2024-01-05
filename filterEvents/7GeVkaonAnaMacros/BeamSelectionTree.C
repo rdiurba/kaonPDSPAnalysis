@@ -254,6 +254,16 @@ tree.Branch("reco_daughter_allTrack_endX",&reco_daughter_allTrack_endX);
 tree.Branch("reco_daughter_allTrack_endY",&reco_daughter_allTrack_endY);
 tree.Branch("reco_daughter_allTrack_endZ",&reco_daughter_allTrack_endZ);
 
+tree.Branch("reco_beam_calo_Z",&reco_beam_calo_Z);
+tree.Branch("reco_beam_calo_X",&reco_beam_calo_X);
+tree.Branch("reco_beam_calo_Y",&reco_beam_calo_Y);
+
+
+
+
+
+
+
 
 tree.Branch("reco_daughter_PFP_true_byHits_startX",&reco_daughter_PFP_true_byHits_startX);
 tree.Branch("reco_daughter_PFP_true_byHits_startY",&reco_daughter_PFP_true_byHits_startY);
@@ -275,7 +285,7 @@ Long64_t nbytes = 0, nb = 0;
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
-      if(jentry%1000==0) std::cout<<jentry<<"/"<<nentries<<std::endl;
+      if(jentry%10000==0) std::cout<<jentry<<"/"<<nentries<<std::endl;
       // if (Cut(ientry) < 0) continue;
     beam_inst_P=7.f*beam_inst_P;
      double trklen=reco_beam_alt_len; 
@@ -296,6 +306,41 @@ Long64_t nbytes = 0, nb = 0;
    reco_daughter_PFP_true_nDaughters=reco_daughter_PFP_true_byHits_ID->size();
      reco_beam_daughter_sameID=0;
      true_beam_len=-99999;
+     for (long unsigned int calo=0; calo<reco_beam_calo_X->size();calo++){
+     if (calo==0)      reco_beam_startZ=reco_beam_calo_Z->at(0);
+     if (reco_beam_calo_Z->at(calo)>40) break;
+     if (abs(reco_beam_startZ-30)<abs(reco_beam_calo_Z->at(calo)-30)) continue;
+     reco_beam_startX=reco_beam_calo_X->at(calo);
+     reco_beam_startY=reco_beam_calo_Y->at(calo);
+     reco_beam_startZ=reco_beam_calo_Z->at(calo);
+     }
+     reco_beam_endX=reco_beam_calo_endX;
+     reco_beam_endY=reco_beam_calo_endY;
+     reco_beam_endZ=reco_beam_calo_endZ;
+     double cosDirX=beam_inst_dirX/beam_inst_dirZ;
+     double cosDirY=beam_inst_dirY/beam_inst_dirZ;
+     double newX=(30-beam_inst_Z)*cosDirX+beam_inst_X;
+     double newY=(30-beam_inst_Z)*cosDirY+beam_inst_Y;     
+     beam_inst_X=newX;
+     beam_inst_Y=newY;
+     beam_inst_Z=30;
+     double dZCalo=reco_beam_endZ-reco_beam_startZ;
+     double dXCalo=reco_beam_endX-reco_beam_startX;
+     double dYCalo=reco_beam_endY-reco_beam_startY;
+     double reco_beam_trkLen_30cm=TMath::Sqrt(dXCalo*dXCalo+dYCalo*dYCalo+dZCalo*dZCalo);
+     reco_beam_trackDirX=dXCalo/reco_beam_trkLen_30cm;
+     reco_beam_trackDirY=dYCalo/reco_beam_trkLen_30cm;
+     reco_beam_trackDirZ=dZCalo/reco_beam_trkLen_30cm;
+
+
+
+
+
+
+
+
+
+
      for(int daughterID:*reco_daughter_PFP_true_byHits_ID){
       
      if (daughterID==reco_beam_true_byE_ID) reco_beam_daughter_sameID=1;
@@ -336,9 +381,9 @@ inelProcess="protonInelastic";
    if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1 ) selection_ID=5;
   // if(reco_beam_len<-800 || reco_beam_calo_wire->size()<1) continue;
    //else if (abs(reco_beam_dCos)<0.989 || reco_beam_dCos>0.997 || abs(beam_inst_Y-reco_beam_startY+0.33)>0.69 || abs(beam_inst_Z-reco_beam_startZ+29.6)>1.2  || abs(beam_inst_X-reco_beam_startX-0.05)>0.3 || abs(reco_beam_diffXY-0.397)>0.615) selection_ID=4;
-    else if (reco_beam_endZ<51.8865) selection_ID=4;
+    else if (reco_beam_endZ<30) selection_ID=4;
   
-    else if (abs(reco_beam_dCos)<0.9874 || reco_beam_dCos>0.9974 || abs(beam_inst_Y-reco_beam_startY+0.3300)>0.7536 || abs(beam_inst_Z-reco_beam_startZ+29.6243)>1.2273  || abs(beam_inst_X-reco_beam_startX-0.04490)>0.6285 || abs(reco_beam_diffXY-0.3953)>0.6026) selection_ID=3;
+    else if (reco_beam_dCos>1 || reco_beam_dCos<(1-0.002669*3) || abs(beam_inst_Y-reco_beam_startY+0.9011)>(0.275247*3) || /*abs(beam_inst_Z-reco_beam_startZ+0.006756)>(0.242725*3)  ||*/ abs(beam_inst_X-reco_beam_startX-2.13161)>(0.260185*3) || abs(reco_beam_diffXY-2.33603)>(0.270594*3)) selection_ID=3;
 
    else if (reco_beam_endZ>220.0) selection_ID=2;
    else if (reco_beam_zEndPointCos<.99 && reco_beam_zEndPointCos>0.87) selection_ID=1;
@@ -420,7 +465,7 @@ if(index<reco_beam_calibrated_dEdX_SCE->size()-1) reco_beam_calibrated_incidentE
 }
 }
 reco_beam_calibrated_interactingEnergy=interactingKE;
-std::cout<<interactingKE<<std::endl;
+//std::cout<<interactingKE<<std::endl;
 }
 
 /*if(true_beam_slices->size()){  
